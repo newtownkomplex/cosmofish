@@ -1,7 +1,7 @@
 (() => {
   let ctx = null;
   let started = false;
-  let droneTimer = null;
+  let seqTimer = null;
   let searchTimer = null;
 
   function initAudio() {
@@ -13,46 +13,55 @@
     if (!AC) return;
     ctx = new AC();
     started = true;
+
     const master = ctx.createGain();
-    master.gain.value = 0.028;
+    master.gain.value = 0.045;
     master.connect(ctx.destination);
+
+    // Minimal chiptune / BPM 90
+    const bpm = 90;
+    const beat = 60 / bpm;
+    const melody = [
+      659.25, 783.99, 880, 783.99, 659.25, 587.33, 659.25, 523.25,
+      659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33, 523.25
+    ];
+    const bass = [164.81, 164.81, 196.00, 196.00, 146.83, 146.83, 130.81, 130.81];
     let step = 0;
-    const roots = [55, 61.735, 65.406, 73.416, 82.407, 65.406];
-    function drone() {
+
+    function blip(freq, duration, volume, type, time) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(volume, time + 0.008);
+      gain.gain.setValueAtTime(volume, time + Math.max(0.01, duration - 0.035));
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(time);
+      osc.stop(time + duration + 0.02);
+    }
+
+    function sequence() {
       if (!ctx) return;
       if (ctx.state === 'suspended') ctx.resume();
       const now = ctx.currentTime;
-      const base = roots[step++ % roots.length];
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-      osc1.type = 'sine';
-      osc2.type = 'triangle';
-      osc1.frequency.setValueAtTime(base, now);
-      osc2.frequency.setValueAtTime(base * 2.003, now);
-      filter.type = 'lowpass';
-      filter.frequency.value = 500;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.12, now + 5);
-      gain.gain.linearRampToValueAtTime(0.08, now + 14);
-      gain.gain.linearRampToValueAtTime(0, now + 22);
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(gain);
-      gain.connect(master);
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 22.5);
-      osc2.stop(now + 22.5);
-      droneTimer = setTimeout(drone, 18000);
+      const m = melody[step % melody.length];
+      const b = bass[Math.floor(step / 2) % bass.length];
+      blip(m, beat * 0.72, 0.075, 'square', now);
+      if (step % 2 === 0) blip(b, beat * 1.55, 0.055, 'triangle', now);
+      step++;
+      seqTimer = setTimeout(sequence, beat * 1000);
     }
+
+    // 1分に1回のサーチ音。深く長いリバーブ。
     function searchChime() {
       if (!ctx || ctx.state !== 'running') return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const toneGain = ctx.createGain();
-      const delay = ctx.createDelay(2.8);
+      const delay = ctx.createDelay(3.5);
       const feedback = ctx.createGain();
       const wet = ctx.createGain();
       const reverbFilter = ctx.createBiquadFilter();
@@ -65,9 +74,9 @@
       toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
       reverbFilter.type = 'lowpass';
       reverbFilter.frequency.value = 2200;
-      delay.delayTime.value = 0.42;
-      feedback.gain.value = 0.72;
-      wet.gain.value = 0.42;
+      delay.delayTime.value = 0.48;
+      feedback.gain.value = 0.78;
+      wet.gain.value = 0.45;
       osc.connect(toneGain);
       toneGain.connect(master);
       toneGain.connect(delay);
@@ -79,143 +88,13 @@
       osc.start(now);
       osc.stop(now + 0.45);
     }
-    drone();
+
+    sequence();
     searchChime();
-    searchTimer = setInterval(searchChime, 16000);
+    searchTimer = setInterval(searchChime, 60000);
   }
 
-  const pond = document.getElementById('pond');
-  const gauge = document.getElementById('gauge');
-  const cursor = document.getElementById('cursor');
-  const status = document.getElementById('status');
-  const catchBox = document.getElementById('catch');
-  const cells = pond ? [...pond.querySelectorAll('.cell')] : [];
-  const saveKey = 'cosmofish-catches';
-  let counts = {};
-  try { counts = JSON.parse(localStorage.getItem(saveKey) || '{}'); } catch (e) {}
-  let fishing = false;
-  let fishingSize = 'medium';
-  let gaugeStarted = 0;
-  let gaugeRaf = 0;
-  let gaugePosition = 0;
-
-  function rarityClass(r) {
-    return r === 'めずらしい' ? 'rare' : r === 'まぼろし' ? 'mythical' : r === '未確認' ? 'unconfirmed' : 'common';
-  }
-
-  function pickFish(size) {
-    const rates = size === 'gold' ? [['めずらしい', 10], ['まぼろし', 90]] : [['ふつう', 91], ['めずらしい', 9]];
-    let x = Math.random() * 100;
-    let sum = 0;
-    for (const [rarity, rate] of rates) {
-      sum += rate;
-      if (x < sum) {
-        const pool = fishData.filter(f => f.rarity === rarity);
-        return pool[Math.floor(Math.random() * pool.length)];
-      }
-    }
-  }
-
-  function makeRandomShadows() {
-    if (!pond) return;
-    cells.forEach(c => c.replaceChildren());
-    const count = 4 + Math.floor(Math.random() * 4);
-    const chosen = [...cells].sort(() => Math.random() - 0.5).slice(0, count);
-    const placed = [];
-    chosen.forEach(cell => {
-      let shadow = null;
-      for (let attempt = 0; attempt < 80; attempt++) {
-        const r = Math.random();
-        const kind = r < 0.01 ? 'gold' : r < 0.09 ? 'large' : 'medium';
-        const w = kind === 'medium' ? 52 : 78;
-        const h = kind === 'medium' ? 26 : 39;
-        const padX = w / 2 + 8;
-        const padY = h / 2 + 8;
-        const x = padX + Math.random() * Math.max(1, cell.clientWidth - padX * 2);
-        const y = padY + Math.random() * Math.max(1, cell.clientHeight - padY * 2);
-        const rect = cell.getBoundingClientRect();
-        const cx = rect.left + x;
-        const cy = rect.top + y;
-        const overlaps = placed.some(p => {
-          const dx = cx - p.cx;
-          const dy = cy - p.cy;
-          return Math.sqrt(dx * dx + dy * dy) < (w + p.w) / 2 + 10 && Math.abs(dy) < (h + p.h) / 2 + 10;
-        });
-        if (!overlaps) {
-          shadow = document.createElement('div');
-          shadow.className = 'shadow ' + kind;
-          shadow.style.left = x + 'px';
-          shadow.style.top = y + 'px';
-          cell.appendChild(shadow);
-          placed.push({ cx, cy, w, h });
-          break;
-        }
-      }
-    });
-  }
-
-  function startFishing(shadow) {
-    if (fishing) return;
-    fishing = true;
-    fishingSize = shadow.classList.contains('gold') ? 'gold' : shadow.classList.contains('large') ? 'large' : 'medium';
-    shadow.style.display = 'none';
-    gaugeStarted = performance.now();
-    gaugePosition = 0;
-    cursor.style.left = '0%';
-    status.textContent = '黄色いTAPゾーンでTAP!';
-    function animate(now) {
-      if (!fishing) return;
-      const t = ((now - gaugeStarted) % 1000) / 1000;
-      gaugePosition = t <= 0.5 ? t * 200 : (1 - t) * 200;
-      cursor.style.left = gaugePosition + '%';
-      gaugeRaf = requestAnimationFrame(animate);
-    }
-    gaugeRaf = requestAnimationFrame(animate);
-  }
-
-  function finishFishing() {
-    if (!fishing) return;
-    fishing = false;
-    cancelAnimationFrame(gaugeRaf);
-    const success = gaugePosition >= 40 && gaugePosition <= 60;
-    if (!success) {
-      status.textContent = '逃げられた……';
-      setTimeout(() => {
-        status.textContent = '魚影をタップして釣りを開始';
-        makeRandomShadows();
-      }, 900);
-      return;
-    }
-    const fish = pickFish(fishingSize);
-    counts[fish.id] = (counts[fish.id] || 0) + 1;
-    localStorage.setItem(saveKey, JSON.stringify(counts));
-    catchBox.innerHTML = '釣り成功！　<span class="' + rarityClass(fish.rarity) + '">' + fish.name + '</span>';
-    catchBox.classList.remove('hidden');
-    status.classList.add('success');
-    status.textContent = '捕獲しました（' + counts[fish.id] + '回目）';
-    setTimeout(() => {
-      catchBox.classList.add('hidden');
-      status.classList.remove('success');
-      status.textContent = '魚影をタップして釣りを開始';
-      makeRandomShadows();
-    }, 1200);
-  }
-
-  window.addEventListener('pointerdown', e => {
-    if (e.target.closest && e.target.closest('.shadow')) {
-      e.preventDefault();
-      e.stopPropagation();
-      initAudio();
-      startFishing(e.target.closest('.shadow'));
-      return;
-    }
-    if (gauge && (e.target === gauge || gauge.contains(e.target)) && fishing) {
-      e.preventDefault();
-      e.stopPropagation();
-      finishFishing();
-    }
-  }, true);
-
-  setTimeout(makeRandomShadows, 0);
-  window.addEventListener('resize', () => { if (!fishing) makeRandomShadows(); });
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest && e.target.closest('.shadow')) initAudio();
+  }, { capture: true });
 })();
