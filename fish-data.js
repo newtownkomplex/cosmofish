@@ -20,7 +20,7 @@ const fishData=[
 {id:19,name:'星灯りイサキ',rarity:'ふつう',desc:'暗闇で体の縞模様が淡く発光する夜行性の魚。'},
 {id:20,name:'月面ボラ',rarity:'ふつう',desc:'月のクレーターに溜まった水たまりを好んで泳ぐボラ。'},
 {id:21,name:'星屑カワムツ',rarity:'ふつう',desc:'群れで泳ぐたび、細かな光の粒を撒き散らす。'},
-{id:22,name:'銀河ヤマメ',rarity:'ふつう',desc:'銀河の流れを遡上するように泳ぐ、銀色のヤマメ。'},
+{id:22,name:'銀河ヤマメ',rarity:'ふつう',desc:'銀河の流れを遡上するように泳む、銀色のヤマメ。'},
 {id:23,name:'星雲シシャモ',rarity:'ふつう',desc:'星雲のガスを吸い込んで、腹部を青白く光らせる。'},
 {id:24,name:'月影ハヤ',rarity:'ふつう',desc:'月の影に沿って泳ぐため、捕まえるのが難しい魚。'},
 {id:25,name:'流星ニゴイ',rarity:'ふつう',desc:'流星が落ちる場所に集まる、少し鈍そうで実は素早い魚。'},
@@ -53,3 +53,8 @@ const fishData=[
 {id:52,name:'ニュートリノハオリムシ',rarity:'まぼろし',desc:'ほとんど何にも反応しない「ニュートリノ」を栄養にしているとされるハオリムシ。数百年に一度しか姿を現さない。'},
 {id:53,name:'未確認',rarity:'未確認',desc:'まだ記録されていない、正体不明の宇宙魚。'}
 ];
+
+// index.html側の古いゲージ判定を上書きする専用処理を読み込む
+const gaugeScript=document.createElement('script');
+gaugeScript.src='gauge.js';
+document.head.appendChild(gaugeScript);
