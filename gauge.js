@@ -1,4 +1,18 @@
 (() => {
+  // 魚影を楕円ではなく真円にする
+  const style = document.createElement('style');
+  style.textContent = `
+    .shadow.medium { width: 34px !important; height: 34px !important; }
+    .shadow.large { width: 52px !important; height: 52px !important; }
+    .shadow.gold { width: 52px !important; height: 52px !important; }
+    @media (max-width: 700px) {
+      .shadow.medium { width: 28px !important; height: 28px !important; }
+      .shadow.large { width: 44px !important; height: 44px !important; }
+      .shadow.gold { width: 44px !important; height: 44px !important; }
+    }
+  `;
+  document.head.appendChild(style);
+
   const gauge = document.getElementById('gauge');
   const status = document.getElementById('status');
   const cursor = document.getElementById('cursor');
