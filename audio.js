@@ -5,6 +5,10 @@
   const enabledKey = 'cosmofish-music-enabled';
   let enabled = localStorage.getItem(enabledKey) !== 'off';
 
+  // index.html に残っていた旧音声関数を無効化し、audio.js に一本化
+  window.startBGM = function() {};
+  window.playSearchChime = function() {};
+
   const NativeAudioContext = window.AudioContext;
   if (NativeAudioContext && !window.__cosmofishAudioWrapped) {
     const contexts = [];
@@ -15,8 +19,8 @@
     };
     WrappedAudioContext.prototype = NativeAudioContext.prototype;
     window.AudioContext = WrappedAudioContext;
-    window.__cosmofishAudioWrapped = true;
     window.__cosmofishAudioContexts = contexts;
+    window.__cosmofishAudioWrapped = true;
   }
 
   function stopOldAudioContexts() {
@@ -38,10 +42,12 @@
     stopOldAudioContexts();
     ctx = new AC();
     started = true;
+
     const master = ctx.createGain();
     master.gain.value = 0.045;
     master.connect(ctx.destination);
 
+    // Minimal chiptune / BPM 90
     const bpm = 90;
     const beat = 60 / bpm;
     const melody = [659.25,783.99,880,783.99,659.25,587.33,659.25,523.25,659.25,783.99,987.77,880,783.99,659.25,587.33,523.25];
@@ -59,7 +65,7 @@
     }
 
     function sequence() {
-      if (!ctx || ctx.state === 'closed') return;
+      if (!ctx || ctx.state === 'closed' || !enabled) return;
       if (ctx.state === 'suspended') ctx.resume();
       const now=ctx.currentTime, m=melody[step%melody.length], b=bass[Math.floor(step/2)%bass.length];
       blip(m,beat*0.72,0.075,'square',now);
@@ -78,8 +84,12 @@
   function setMusic(on) {
     enabled=on;
     localStorage.setItem(enabledKey,on?'on':'off');
-    if(on) initAudio();
-    else if(ctx && ctx.state!=='closed') { try{ctx.suspend();}catch(e){} }
+    if(on) {
+      initAudio();
+    } else {
+      if(seqTimer) { clearTimeout(seqTimer); seqTimer=null; }
+      if(ctx && ctx.state!=='closed') { try{ctx.suspend();}catch(e){} }
+    }
     updateMusicButton();
   }
 
@@ -89,15 +99,15 @@
     const wrap=document.createElement('div');
     wrap.style.cssText='margin:0 0 24px;padding-bottom:20px;border-bottom:1px solid #fff500;';
     const b=document.createElement('button');
-    b.id='musicToggle'; b.className='reset-btn'; b.addEventListener('click',()=>setMusic(!enabled));
+    b.id='musicToggle'; b.className='reset-btn'; b.type='button';
+    b.addEventListener('click',()=>setMusic(!enabled));
     wrap.appendChild(b); list.prepend(wrap); updateMusicButton();
   }
 
-  const openBook=document.getElementById('openBook');
-  if(openBook) openBook.addEventListener('click',()=>setTimeout(addMusicToggle,0));
-
-  // 魚影をタップした時だけBGM開始。サーチ音は完全に削除。
   document.addEventListener('pointerdown',e=>{
     if(e.target.closest && e.target.closest('.shadow')) initAudio();
   },{capture:true});
+
+  const openBook=document.getElementById('openBook');
+  if(openBook) openBook.addEventListener('click',()=>setTimeout(addMusicToggle,0));
 })();
