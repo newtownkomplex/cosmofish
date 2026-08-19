@@ -17,18 +17,55 @@
 <div class="overlay hidden" id="bookOverlay"><section class="panel"><header class="panel-header"><h2>魚図鑑</h2><button class="close" id="closeBook">×</button></header><div class="book-list" id="bookList"></div></section></div>
 <div class="overlay hidden" id="detailOverlay"><section class="panel"><header class="panel-header"><h2 id="detailNo">No.01</h2><button class="close" id="closeDetail">×</button></header><div class="detail"><div class="fish-image">FISH IMAGE</div><div class="detail-rarity" id="detailRarity">ふつう</div><h2 class="detail-name" id="detailName">星くずアジ</h2><div class="detail-line"></div><p class="detail-description" id="detailDescription">あああああああああああ</p></div></section></div>
 <script>
-const fishData=[{id:1,name:"星くずアジ",rarity:"ふつう",description:"あああああああああああ"},{id:2,name:"銀河メダカ",rarity:"ふつう",description:"あああああああああああ"},{id:3,name:"月面コイ",rarity:"ふつう",description:"あああああああああああ"},{id:4,name:"ネビュラナマズ",rarity:"めずらしい",description:"あああああああああああ"},{id:5,name:"彗星ウナギ",rarity:"まぼろし",description:"あああああああああああ"},{id:6,name:"？？？？？？",rarity:"???",description:"あああああああああああ"}];
-const pond=document.getElementById("pond"),cells=[...pond.querySelectorAll(".cell")],gaugeWrap=document.getElementById("gaugeWrap"),gauge=document.getElementById("gauge"),cursor=document.getElementById("cursor"),status=document.getElementById("status"),catchOverlay=document.getElementById("catchOverlay"),catchOverlayText=document.getElementById("catchOverlayText"),openBook=document.getElementById("openBook"),closeBook=document.getElementById("closeBook"),bookOverlay=document.getElementById("bookOverlay"),bookList=document.getElementById("bookList"),closeDetail=document.getElementById("closeDetail"),detailOverlay=document.getElementById("detailOverlay"),detailNo=document.getElementById("detailNo"),detailRarity=document.getElementById("detailRarity"),detailName=document.getElementById("detailName"),detailDescription=document.getElementById("detailDescription");
-let active=false,activeShadow=null,position=0,direction=1,animationId=null,gaugeStart=0;const caughtFish=new Set();
-function resetShadows(){cells.forEach(cell=>cell.innerHTML="");const count=2+Math.floor(Math.random()*3),shuffledCells=[...cells].sort(()=>Math.random()-.5),selectedCells=shuffledCells.slice(0,count);selectedCells.forEach(cell=>{const shadow=document.createElement("div");shadow.className="shadow "+getShadowSize();shadow.style.left=35+Math.random()*30+"%";shadow.style.top=35+Math.random()*30+"%";shadow.onclick=()=>startFishing(shadow);cell.appendChild(shadow)})}
-function getShadowSize(){const random=Math.random();if(random<.20)return"large";if(random<.50)return"medium";return"small"}
+const fishData=[
+{id:1,name:"星くずアジ",rarity:"ふつう",description:"あああああああああああ"},
+{id:2,name:"銀河メダカ",rarity:"ふつう",description:"あああああああああああ"},
+{id:3,name:"月面コイ",rarity:"ふつう",description:"あああああああああああ"},
+{id:7,name:"星雲アユ",rarity:"ふつう",description:"あああああああああああ"},
+{id:8,name:"月影フナ",rarity:"ふつう",description:"あああああああああああ"},
+{id:9,name:"彗星イワナ",rarity:"ふつう",description:"あああああああああああ"},
+{id:10,name:"銀河ドジョウ",rarity:"ふつう",description:"あああああああああああ"},
+{id:11,name:"星砂ハゼ",rarity:"ふつう",description:"あああああああああああ"},
+{id:12,name:"宙空ナマズ",rarity:"ふつう",description:"あああああああああああ"},
+{id:13,name:"流星カジカ",rarity:"ふつう",description:"あああああああああああ"},
+{id:14,name:"星屑メバル",rarity:"ふつう",description:"あああああああああああ"},
+{id:15,name:"月光サンマ",rarity:"ふつう",description:"あああああああああああ"},
+{id:16,name:"宇宙タナゴ",rarity:"ふつう",description:"あああああああああああ"},
+{id:17,name:"星霜ワカサギ",rarity:"ふつう",description:"あああああああああああ"},
+{id:18,name:"銀河ウナギ",rarity:"ふつう",description:"あああああああああああ"},
+{id:19,name:"月虹コイ",rarity:"ふつう",description:"あああああああああああ"},
+{id:20,name:"星海キンギョ",rarity:"ふつう",description:"あああああああああああ"},
+{id:21,name:"彗星カマス",rarity:"ふつう",description:"あああああああああああ"},
+{id:22,name:"宙色アジ",rarity:"ふつう",description:"あああああああああああ"},
+{id:23,name:"星灯りイサキ",rarity:"ふつう",description:"あああああああああああ"},
+{id:24,name:"月面ボラ",rarity:"ふつう",description:"あああああああああああ"},
+{id:25,name:"星屑カワムツ",rarity:"ふつう",description:"あああああああああああ"},
+{id:26,name:"銀河ヤマメ",rarity:"ふつう",description:"あああああああああああ"},
+{id:27,name:"星雲シシャモ",rarity:"ふつう",description:"あああああああああああ"},
+{id:28,name:"月影ハヤ",rarity:"ふつう",description:"あああああああああああ"},
+{id:29,name:"流星ニゴイ",rarity:"ふつう",description:"あああああああああああ"},
+{id:30,name:"星海カレイ",rarity:"ふつう",description:"あああああああああああ"},
+{id:31,name:"宙釣りサバ",rarity:"ふつう",description:"あああああああああああ"},
+{id:32,name:"月虹オイカワ",rarity:"ふつう",description:"あああああああああああ"},
+{id:33,name:"星砂トビウオ",rarity:"ふつう",description:"あああああああああああ"},
+{id:34,name:"銀河カジキ",rarity:"ふつう",description:"あああああああああああ"},
+{id:35,name:"彗星フグ",rarity:"ふつう",description:"あああああああああああ"},
+{id:36,name:"星屑チョウチンアンコウ",rarity:"ふつう",description:"あああああああああああ"},
+{id:37,name:"ネビュラナマズ",rarity:"めずらしい",description:"あああああああああああ"},
+{id:38,name:"彗星ウナギ",rarity:"まぼろし",description:"あああああああああああ"},
+{id:39,name:"？？？？？？",rarity:"???",description:"あああああああああああ"}
+];
+const pond=document.getElementById("pond"),cells=[...pond.querySelectorAll(".cell")],gauge=document.getElementById("gauge"),cursor=document.getElementById("cursor"),status=document.getElementById("status"),catchOverlay=document.getElementById("catchOverlay"),catchOverlayText=document.getElementById("catchOverlayText"),openBook=document.getElementById("openBook"),closeBook=document.getElementById("closeBook"),bookOverlay=document.getElementById("bookOverlay"),bookList=document.getElementById("bookList"),closeDetail=document.getElementById("closeDetail"),detailOverlay=document.getElementById("detailOverlay"),detailNo=document.getElementById("detailNo"),detailRarity=document.getElementById("detailRarity"),detailName=document.getElementById("detailName"),detailDescription=document.getElementById("detailDescription");
+let active=false,activeShadow=null,position=0,animationId=null,gaugeStart=0;const caughtFish=new Set();
+function resetShadows(){cells.forEach(cell=>cell.innerHTML="");const count=2+Math.floor(Math.random()*3),selected=[...cells].sort(()=>Math.random()-.5).slice(0,count);selected.forEach(cell=>{const shadow=document.createElement("div");shadow.className="shadow "+getShadowSize();shadow.style.left=35+Math.random()*30+"%";shadow.style.top=35+Math.random()*30+"%";shadow.onclick=()=>startFishing(shadow);cell.appendChild(shadow)})}
+function getShadowSize(){const r=Math.random();if(r<.20)return"large";if(r<.50)return"medium";return"small"}
 function startFishing(shadow){if(active)return;active=true;activeShadow=shadow;shadow.style.display="none";status.textContent="魚がかかった……！";setTimeout(()=>{if(active){status.textContent="中央の黄色い範囲でTAP!";startGauge()}},450)}
-function startGauge(){position=0;direction=1;gaugeStart=performance.now();cancelAnimationFrame(animationId);function animate(now){if(!active)return;const elapsed=(now-gaugeStart)%1000;position=elapsed<500?(elapsed/500)*100:100-((elapsed-500)/500)*100;cursor.style.left=position+"%";animationId=requestAnimationFrame(animate)}animationId=requestAnimationFrame(animate)}
-gauge.addEventListener("pointerdown",()=>{if(!active)return;finishFishing(position>=40&&position<=60)});
+function startGauge(){gaugeStart=performance.now();cancelAnimationFrame(animationId);function animate(now){if(!active)return;const elapsed=(now-gaugeStart)%1000;position=elapsed<500?elapsed/500*100:100-(elapsed-500)/500*100;cursor.style.left=position+"%";animationId=requestAnimationFrame(animate)}animationId=requestAnimationFrame(animate)}
+gauge.addEventListener("pointerdown",()=>{if(active)finishFishing(position>=40&&position<=60)});
 function finishFishing(success){active=false;cancelAnimationFrame(animationId);if(!success){status.textContent="逃げられた……";setTimeout(()=>{status.textContent="魚影をタップして釣りを開始";resetShadows()},900);return}const fish=getRandomFish();caughtFish.add(fish.id);catchOverlayText.textContent="釣り成功！　"+fish.name;catchOverlay.classList.remove("hidden");status.classList.add("success");status.textContent="捕獲しました";setTimeout(()=>{catchOverlay.classList.add("hidden");status.classList.remove("success");status.textContent="魚影をタップして釣りを開始";resetShadows()},1200)}
-function getRandomFish(){const random=Math.random()*100;let rarity;if(random<.1)rarity="???";else if(random<1)rarity="まぼろし";else if(random<5)rarity="めずらしい";else rarity="ふつう";const candidates=fishData.filter(fish=>fish.rarity===rarity);return candidates[Math.floor(Math.random()*candidates.length)]}
+function getRandomFish(){const random=Math.random()*100;let rarity;if(random<.1)rarity="???";else if(random<1)rarity="まぼろし";else if(random<5)rarity="めずらしい";else rarity="ふつう";const candidates=fishData.filter(f=>f.rarity===rarity);return candidates[Math.floor(Math.random()*candidates.length)]}
 openBook.addEventListener("click",()=>{renderBook();bookOverlay.classList.remove("hidden")});closeBook.addEventListener("click",()=>bookOverlay.classList.add("hidden"));closeDetail.addEventListener("click",()=>detailOverlay.classList.add("hidden"));
-function renderBook(){bookList.innerHTML="";["ふつう","めずらしい","まぼろし","???"].forEach(rarity=>{const section=document.createElement("section");section.className="rarity";const fishes=fishData.filter(fish=>fish.rarity===rarity),caught=fishes.filter(fish=>caughtFish.has(fish.id)).length,title=document.createElement("h3");title.className="rarity-title";title.textContent=rarity+"　"+caught+" / "+fishes.length;const grid=document.createElement("div");grid.className="fish-grid";fishes.forEach(fish=>{const card=document.createElement("button");card.className="fish-card";const isCaught=caughtFish.has(fish.id);if(!isCaught){card.classList.add("locked");card.disabled=true}card.innerHTML=`<div class="fish-no">No.${String(fish.id).padStart(2,"0")}</div><div class="fish-name">${isCaught?fish.name:"？？？？？？"}</div>`;if(isCaught)card.addEventListener("click",()=>showFishDetail(fish));grid.appendChild(card)});section.appendChild(title);section.appendChild(grid);bookList.appendChild(section)})}
+function renderBook(){bookList.innerHTML="";["ふつう","めずらしい","まぼろし","???"].forEach(rarity=>{const section=document.createElement("section");section.className="rarity";const fishes=fishData.filter(f=>f.rarity===rarity),caught=fishes.filter(f=>caughtFish.has(f.id)).length,title=document.createElement("h3");title.className="rarity-title";title.textContent=rarity+"　"+caught+" / "+fishes.length;const grid=document.createElement("div");grid.className="fish-grid";fishes.forEach(fish=>{const card=document.createElement("button");card.className="fish-card";const isCaught=caughtFish.has(fish.id);if(!isCaught){card.classList.add("locked");card.disabled=true}card.innerHTML=`<div class="fish-no">No.${String(fish.id).padStart(2,"0")}</div><div class="fish-name">${isCaught?fish.name:"？？？？？？"}</div>`;if(isCaught)card.addEventListener("click",()=>showFishDetail(fish));grid.appendChild(card)});section.appendChild(title);section.appendChild(grid);bookList.appendChild(section)})}
 function showFishDetail(fish){detailNo.textContent="No."+String(fish.id).padStart(2,"0");detailRarity.textContent=fish.rarity;detailName.textContent=fish.name;detailDescription.textContent=fish.description;detailOverlay.classList.remove("hidden")}
 resetShadows();
 </script>
