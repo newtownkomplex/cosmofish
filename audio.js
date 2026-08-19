@@ -5,41 +5,14 @@
   const enabledKey = 'cosmofish-music-enabled';
   let enabled = localStorage.getItem(enabledKey) !== 'off';
 
-  // index.html に残っていた旧音声関数を無効化し、audio.js に一本化
+  // 音声処理は audio.js に一本化。魚影タップでは再生を開始しない。
   window.startBGM = function() {};
   window.playSearchChime = function() {};
 
-  const NativeAudioContext = window.AudioContext;
-  if (NativeAudioContext && !window.__cosmofishAudioWrapped) {
-    const contexts = [];
-    const WrappedAudioContext = function(...args) {
-      const c = new NativeAudioContext(...args);
-      contexts.push(c);
-      return c;
-    };
-    WrappedAudioContext.prototype = NativeAudioContext.prototype;
-    window.AudioContext = WrappedAudioContext;
-    window.__cosmofishAudioContexts = contexts;
-    window.__cosmofishAudioWrapped = true;
-  }
-
-  function stopOldAudioContexts() {
-    (window.__cosmofishAudioContexts || []).forEach(c => {
-      if (c !== ctx && c.state !== 'closed') {
-        try { c.close(); } catch (e) {}
-      }
-    });
-  }
-
   function initAudio() {
-    if (!enabled) return;
-    if (started) {
-      if (ctx && ctx.state === 'suspended') ctx.resume();
-      return;
-    }
+    if (!enabled || started) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    stopOldAudioContexts();
     ctx = new AC();
     started = true;
 
@@ -56,18 +29,24 @@
 
     function blip(freq,duration,volume,type,time) {
       const osc=ctx.createOscillator(),gain=ctx.createGain();
-      osc.type=type; osc.frequency.setValueAtTime(freq,time);
+      osc.type=type;
+      osc.frequency.setValueAtTime(freq,time);
       gain.gain.setValueAtTime(0,time);
       gain.gain.linearRampToValueAtTime(volume,time+0.008);
       gain.gain.setValueAtTime(volume,time+Math.max(0.01,duration-0.035));
       gain.gain.exponentialRampToValueAtTime(0.001,time+duration);
-      osc.connect(gain); gain.connect(master); osc.start(time); osc.stop(time+duration+0.02);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(time);
+      osc.stop(time+duration+0.02);
     }
 
     function sequence() {
       if (!ctx || ctx.state === 'closed' || !enabled) return;
       if (ctx.state === 'suspended') ctx.resume();
-      const now=ctx.currentTime, m=melody[step%melody.length], b=bass[Math.floor(step/2)%bass.length];
+      const now=ctx.currentTime;
+      const m=melody[step%melody.length];
+      const b=bass[Math.floor(step/2)%bass.length];
       blip(m,beat*0.72,0.075,'square',now);
       if(step%2===0) blip(b,beat*1.55,0.055,'triangle',now);
       step++;
@@ -86,6 +65,7 @@
     localStorage.setItem(enabledKey,on?'on':'off');
     if(on) {
       initAudio();
+      if(ctx && ctx.state === 'suspended') ctx.resume();
     } else {
       if(seqTimer) { clearTimeout(seqTimer); seqTimer=null; }
       if(ctx && ctx.state!=='closed') { try{ctx.suspend();}catch(e){} }
@@ -99,14 +79,14 @@
     const wrap=document.createElement('div');
     wrap.style.cssText='margin:0 0 24px;padding-bottom:20px;border-bottom:1px solid #fff500;';
     const b=document.createElement('button');
-    b.id='musicToggle'; b.className='reset-btn'; b.type='button';
+    b.id='musicToggle';
+    b.className='reset-btn';
+    b.type='button';
     b.addEventListener('click',()=>setMusic(!enabled));
-    wrap.appendChild(b); list.prepend(wrap); updateMusicButton();
+    wrap.appendChild(b);
+    list.prepend(wrap);
+    updateMusicButton();
   }
-
-  document.addEventListener('pointerdown',e=>{
-    if(e.target.closest && e.target.closest('.shadow')) initAudio();
-  },{capture:true});
 
   const openBook=document.getElementById('openBook');
   if(openBook) openBook.addEventListener('click',()=>setTimeout(addMusicToggle,0));
