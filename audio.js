@@ -18,7 +18,6 @@
     master.gain.value = 0.028;
     master.connect(ctx.destination);
 
-    // ノンビートのドローン・アンビエント
     let step = 0;
     const roots = [55, 61.735, 65.406, 73.416, 82.407, 65.406];
     function drone() {
@@ -51,16 +50,16 @@
       droneTimer = setTimeout(drone, 18000);
     }
 
-    // リバーブ付き「ピコーン」サーチ音
+    // リバーブを深く長くした「ピコーン」サーチ音
     function searchChime() {
       if (!ctx || ctx.state !== 'running') return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const toneGain = ctx.createGain();
-      const delay = ctx.createDelay(1.2);
+      const delay = ctx.createDelay(2.8);
       const feedback = ctx.createGain();
       const wet = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+      const reverbFilter = ctx.createBiquadFilter();
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(880, now);
@@ -71,19 +70,19 @@
       toneGain.gain.linearRampToValueAtTime(0.10, now + 0.015);
       toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
 
-      filter.type = 'lowpass';
-      filter.frequency.value = 3200;
-      delay.delayTime.value = 0.28;
-      feedback.gain.value = 0.38;
-      wet.gain.value = 0.34;
+      reverbFilter.type = 'lowpass';
+      reverbFilter.frequency.value = 2200;
+      delay.delayTime.value = 0.42;
+      feedback.gain.value = 0.72;
+      wet.gain.value = 0.42;
 
-      osc.connect(filter);
-      filter.connect(toneGain);
+      osc.connect(toneGain);
       toneGain.connect(master);
       toneGain.connect(delay);
       delay.connect(feedback);
       feedback.connect(delay);
-      delay.connect(wet);
+      delay.connect(reverbFilter);
+      reverbFilter.connect(wet);
       wet.connect(master);
 
       osc.start(now);
@@ -92,7 +91,7 @@
 
     drone();
     searchChime();
-    searchTimer = setInterval(searchChime, 8000);
+    searchTimer = setInterval(searchChime, 16000);
   }
 
   document.addEventListener('pointerdown', initAudio, { once: true, capture: true });
