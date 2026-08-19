@@ -84,8 +84,6 @@
     searchTimer = setInterval(searchChime, 16000);
   }
 
-  // ゲーム側の旧ハンドラより先に入力を受け取り、
-  // 「黄色いTAPゾーンにバーが重なっている瞬間」だけ成功にする。
   const pond = document.getElementById('pond');
   const gauge = document.getElementById('gauge');
   const cursor = document.getElementById('cursor');
@@ -203,11 +201,11 @@
     }, 1200);
   }
 
-  // window captureなので、既存のpond/gaugeハンドラより先に処理できる。
   window.addEventListener('pointerdown', e => {
     if (e.target.closest && e.target.closest('.shadow')) {
       e.preventDefault();
       e.stopPropagation();
+      initAudio();
       startFishing(e.target.closest('.shadow'));
       return;
     }
@@ -218,9 +216,6 @@
     }
   }, true);
 
-  // 初回表示も9マスの中心固定ではなく、ランダム配置にする。
   setTimeout(makeRandomShadows, 0);
   window.addEventListener('resize', () => { if (!fishing) makeRandomShadows(); });
-
-  document.addEventListener('pointerdown', initAudio, { once: true, capture: true });
 })();
