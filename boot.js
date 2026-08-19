@@ -9,6 +9,35 @@
     </div>`;
   document.body.appendChild(overlay);
 
+  // 起動完了後にゲーム画面を改めて浮かび上がらせる。
+  const style = document.createElement('style');
+  style.textContent = `
+    .pond { position:relative !important; display:block !important; }
+    .spot { position:absolute !important; margin:0 !important; }
+    .spot:nth-child(1) { left:50% !important; top:3% !important; transform:translateX(-50%) !important; }
+    .spot:nth-child(2) { left:36% !important; top:36% !important; transform:translateX(-50%) !important; }
+    .spot:nth-child(3) { left:64% !important; top:36% !important; transform:translateX(-50%) !important; }
+    .spot:nth-child(4) { left:20% !important; top:69% !important; transform:translateX(-50%) !important; }
+    .spot:nth-child(5) { left:50% !important; top:69% !important; transform:translateX(-50%) !important; }
+    .spot:nth-child(6) { left:80% !important; top:69% !important; transform:translateX(-50%) !important; }
+    .game-reveal .header,
+    .game-reveal .book-button,
+    .game-reveal .pond,
+    .game-reveal .gauge,
+    .game-reveal .status { animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important; }
+    .game-reveal .book-button { animation-delay:.12s !important; }
+    .game-reveal .pond { animation-delay:.22s !important; }
+    .game-reveal .gauge { animation-delay:.38s !important; }
+    .game-reveal .status { animation-delay:.5s !important; }
+    @keyframes gameFloatIn {
+      0% { opacity:0; filter:brightness(.15) blur(2px); transform:translateY(10px); }
+      45% { opacity:.42; filter:brightness(.48) blur(.8px); }
+      75% { opacity:.78; filter:brightness(.78) blur(0); transform:translateY(2px); }
+      100% { opacity:1; filter:brightness(1) blur(0); transform:translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
   const text = '程序啟動中...';
   const textEl = document.getElementById('bootText');
   const fill = document.getElementById('bootFill');
@@ -28,6 +57,8 @@
     status.textContent = progress < 1 ? `系統啟動中... ${Math.floor(progress * 100)}%` : '啟動完成';
     if (progress < 1) requestAnimationFrame(load);
     else setTimeout(() => {
+      const screen = document.querySelector('.screen');
+      if (screen) screen.classList.add('game-reveal');
       overlay.classList.add('boot-done');
       setTimeout(() => overlay.remove(), 500);
     }, 180);
