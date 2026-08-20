@@ -9,7 +9,6 @@
     </div>`;
   document.body.appendChild(overlay);
 
-  // 起動完了後にゲーム画面を改めて浮かび上がらせる。
   const style = document.createElement('style');
   style.textContent = `
     .pond { position:relative !important; display:block !important; }
@@ -20,21 +19,9 @@
     .spot:nth-child(4) { left:20% !important; top:69% !important; transform:translateX(-50%) !important; }
     .spot:nth-child(5) { left:50% !important; top:69% !important; transform:translateX(-50%) !important; }
     .spot:nth-child(6) { left:80% !important; top:69% !important; transform:translateX(-50%) !important; }
-    .game-reveal .header,
-    .game-reveal .book-button,
-    .game-reveal .pond,
-    .game-reveal .gauge,
-    .game-reveal .status { animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important; }
-    .game-reveal .book-button { animation-delay:.12s !important; }
-    .game-reveal .pond { animation-delay:.22s !important; }
-    .game-reveal .gauge { animation-delay:.38s !important; }
-    .game-reveal .status { animation-delay:.5s !important; }
-    @keyframes gameFloatIn {
-      0% { opacity:0; filter:brightness(.15) blur(2px); transform:translateY(10px); }
-      45% { opacity:.42; filter:brightness(.48) blur(.8px); }
-      75% { opacity:.78; filter:brightness(.78) blur(0); transform:translateY(2px); }
-      100% { opacity:1; filter:brightness(1) blur(0); transform:translateY(0); }
-    }
+    .game-reveal .header,.game-reveal .book-button,.game-reveal .pond,.game-reveal .gauge,.game-reveal .status { animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important; }
+    .game-reveal .book-button { animation-delay:.12s !important; }.game-reveal .pond { animation-delay:.22s !important; }.game-reveal .gauge { animation-delay:.38s !important; }.game-reveal .status { animation-delay:.5s !important; }
+    @keyframes gameFloatIn { 0% { opacity:0; filter:brightness(.15) blur(2px); transform:translateY(10px); } 45% { opacity:.42; filter:brightness(.48) blur(.8px); } 75% { opacity:.78; filter:brightness(.78) blur(0); transform:translateY(2px); } 100% { opacity:1; filter:brightness(1) blur(0); transform:translateY(0); } }
   `;
   document.head.appendChild(style);
 
@@ -43,14 +30,9 @@
   const fill = document.getElementById('bootFill');
   const status = document.getElementById('bootStatus');
   let i = 0;
+  const typeTimer = setInterval(() => { textEl.textContent = text.slice(0, ++i); if (i >= text.length) clearInterval(typeTimer); }, 120);
 
-  const typeTimer = setInterval(() => {
-    textEl.textContent = text.slice(0, ++i);
-    if (i >= text.length) clearInterval(typeTimer);
-  }, 120);
-
-  const start = performance.now();
-  const duration = 5000;
+  const start = performance.now(), duration = 5000;
   function load(now) {
     const progress = Math.min((now - start) / duration, 1);
     fill.style.width = `${progress * 100}%`;
@@ -64,4 +46,9 @@
     }, 180);
   }
   requestAnimationFrame(load);
+
+  const bookUi=document.createElement('script');
+  bookUi.src='book-ui.js';
+  bookUi.defer=true;
+  document.body.appendChild(bookUi);
 })();
