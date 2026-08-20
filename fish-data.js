@@ -58,3 +58,8 @@ const fishData=[
 const gaugeScript=document.createElement('script');
 gaugeScript.src='gauge.js';
 document.head.appendChild(gaugeScript);
+
+// 捕獲後の6スポット再出現演出を読み込む
+const spotResetScript=document.createElement('script');
+spotResetScript.src='spot-reset.js';
+document.head.appendChild(spotResetScript);
