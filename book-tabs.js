@@ -13,12 +13,9 @@
   style.textContent = `
     .book-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #fff500;margin-bottom:20px}
     .book-tab{border:0;border-right:1px solid #fff500;background:#102a2d;color:#f7f5d9;padding:12px 6px;font-size:13px;letter-spacing:.08em}
-    .book-tab:last-child{border-right:0}
-    .book-tab.active{background:#fff500;color:#19383b}
-    .book-tab.common.active{background:#ff4b4b;color:#fff}
-    .book-tab.rare.active{background:#72d9ff;color:#19383b}
-    .book-tab.mythical.active{background:#c084ff;color:#19383b}
-    .book-tab.unconfirmed.active{background:#f7f5d9;color:#19383b}
+    .book-tab:last-child{border-right:0}.book-tab.active{background:#fff500;color:#19383b}
+    .book-tab.common.active{background:#ff4b4b;color:#fff}.book-tab.rare.active{background:#72d9ff;color:#19383b}
+    .book-tab.mythical.active{background:#c084ff;color:#19383b}.book-tab.unconfirmed.active{background:#f7f5d9;color:#19383b}
     .book-tab-count{display:block;font-size:9px;margin-top:4px;opacity:.8}
     .book-rarity-title{color:#fff500;border-bottom:1px solid #fff500;padding-bottom:8px;font-size:14px;font-weight:normal;margin:0 0 12px}
     .book-size-records{font-size:8px;line-height:1.4;margin-top:6px;letter-spacing:.03em;color:#fff500}
@@ -32,27 +29,19 @@
     return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  function rarityClass(r) {
-    return r === 'めずらしい' ? 'rare' : r === 'まぼろし' ? 'mythical' : r === '未確認' ? 'unconfirmed' : 'common';
-  }
-
   function getSizeRecords() {
     try { return JSON.parse(localStorage.getItem('cosmofish-fish-sizes') || '{}'); }
     catch (e) { return {}; }
   }
 
-  function sizeLine(label, size) {
-    if (!size) return `${label}：—`;
-    return `${label}：${size.name}`;
-  }
+  function sizeLine(label, size) { return `${label}：${size ? size.name : '—'}`; }
 
   function renderBook() {
     const list = document.getElementById('list');
-    if (!list || !Array.isArray(window.fishData)) return;
+    if (!list || typeof fishData === 'undefined') return;
 
     const previousMusic = document.getElementById('musicToggle');
     const musicParent = previousMusic ? previousMusic.parentElement : null;
-    const musicNext = previousMusic ? previousMusic.nextSibling : null;
 
     list.replaceChildren();
 
@@ -85,14 +74,12 @@
     const grid = document.createElement('div');
     grid.className = 'grid';
     const sizeRecords = getSizeRecords();
-
     group.forEach(f => {
       const count = counts[f.id] || 0;
       const card = document.createElement('button');
       card.type = 'button';
       card.className = `card ${count ? '' : 'locked'}`;
       card.innerHTML = `<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count ? escapeHtml(f.name) : '？？？？？？'}</div><div class="no" style="margin-top:8px">${count} / ${need}</div>`;
-
       const rec = sizeRecords[f.id];
       if (rec) {
         const records = document.createElement('div');
@@ -102,7 +89,6 @@
         records.innerHTML = `<div class="${bestClass}">${sizeLine('最大', rec.best)}</div><div class="${minClass}">${sizeLine('最小', rec.min)}</div>`;
         card.appendChild(records);
       }
-
       if (count) card.addEventListener('click', () => showDetail(f, count, need));
       grid.appendChild(card);
     });
@@ -120,13 +106,10 @@
       if (!wrap.parentElement) {
         wrap.style.cssText = 'margin:0 0 24px;padding-bottom:20px;border-bottom:1px solid #fff500;';
         list.prepend(wrap);
-      } else if (wrap.parentElement !== list) {
-        list.prepend(wrap);
       } else {
         list.prepend(wrap);
       }
       if (!wrap.contains(previousMusic)) wrap.appendChild(previousMusic);
-      if (musicNext && musicNext.parentNode === wrap) wrap.insertBefore(previousMusic, musicNext);
     }
   }
 
