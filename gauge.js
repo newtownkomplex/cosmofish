@@ -40,4 +40,19 @@
       recover.addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();catchBox.classList.add('hidden');status.classList.remove('success');status.textContent='魚影をタップして釣りを開始';shadows()});
     }else{status.textContent='逃げられた……';setTimeout(()=>{status.textContent='魚影をタップして釣りを開始';shadows()},900)}
   },{capture:true});
+
+  // 金色の魚影は通常の large 判定とは独立して、0.05% (10000回中5回) のみ出現。
+  // それ以外は中サイズ 91%、大サイズ 8.95% とする。
+  const originalShadows = window.shadows;
+  window.shadows = function(){
+    if (typeof spots === 'undefined') return;
+    spots.forEach(s=>s.replaceChildren());
+    const n=4+Math.floor(Math.random()*3);
+    [...spots].sort(()=>Math.random()-.5).slice(0,n).forEach(s=>{
+      const el=document.createElement('div');
+      const r=Math.random();
+      el.className='shadow '+(r<0.0005?'gold':r<0.09?'large':'medium');
+      s.appendChild(el);
+    });
+  };
 })();
