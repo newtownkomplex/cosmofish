@@ -22,6 +22,8 @@
     .shadow.medium { width:34px !important; height:34px !important; }
     .shadow.large { width:52px !important; height:52px !important; }
     .shadow.gold { width:52px !important; height:52px !important; }
+    .catch { grid-template-rows:1fr auto !important; gap:24px; padding:30px; }
+    .catch-recover { min-width:180px; padding:14px 32px; border:2px solid #fff500; background:#fff500; color:#19383b; font:inherit; cursor:pointer; letter-spacing:.08em; }
     @media (max-width:700px) {
       .spot { width:min(25%,110px) !important; }
       .spot:nth-child(1) { top:2% !important; }
@@ -30,6 +32,8 @@
       .shadow.medium { width:28px !important; height:28px !important; }
       .shadow.large { width:44px !important; height:44px !important; }
       .shadow.gold { width:44px !important; height:44px !important; }
+      .catch { padding:20px; gap:16px; }
+      .catch-recover { min-width:140px; padding:12px 24px; }
     }
   `;
   document.head.appendChild(style);
@@ -53,11 +57,19 @@
       const f = pickFish(currentSize);
       counts[f.id] = (counts[f.id] || 0) + 1;
       localStorage.setItem(saveKey, JSON.stringify(counts));
-      catchBox.innerHTML = '釣り成功！　<span class="' + rarityClass(f.rarity) + '">' + f.name + '</span>';
+      catchBox.innerHTML = '釣り成功！　<span class="' + rarityClass(f.rarity) + '">' + f.name + '</span><button type="button" class="catch-recover">回収</button>';
       catchBox.classList.remove('hidden');
       status.classList.add('success');
       status.textContent = '捕獲しました（' + counts[f.id] + '回目）';
-      setTimeout(() => { catchBox.classList.add('hidden'); status.classList.remove('success'); status.textContent = '魚影をタップして釣りを開始'; shadows(); }, 1200);
+      const recover = catchBox.querySelector('.catch-recover');
+      recover.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        catchBox.classList.add('hidden');
+        status.classList.remove('success');
+        status.textContent = '魚影をタップして釣りを開始';
+        shadows();
+      });
     } else {
       status.textContent = '逃げられた……';
       setTimeout(() => { status.textContent = '魚影をタップして釣りを開始'; shadows(); }, 900);
