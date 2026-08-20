@@ -50,15 +50,10 @@ const fishData=[
 {id:49,name:'ロッシュフウセンウオ',rarity:'まぼろし',desc:'「ロッシュ限界」に近づくほど体が膨らむ不思議な魚。限界を越えると、星屑のように分裂してしまう。'},
 {id:50,name:'アポアプシスクモヒトデ',rarity:'まぼろし',desc:'「アポアプシス」と呼ばれる最遠点を好むクモヒトデ。遠く離れた場所ほど、ゆっくりと大きくなる。'},
 {id:51,name:'エルゴスフィアユメカサゴ',rarity:'まぼろし',desc:'「エルゴスフィア」のように周囲の空間を引きずりながら泳ぐ深海魚。泳いだ跡だけ時間の流れが少し遅くなる。'},
-{id:52,name:'ニュートリノハオリムシ',rarity:'まぼろし',desc:'ほとんど何にも反応しない「ニュートリノ」を栄養にしているとされるハオリムシ。数百年に一度しか姿を現さない。'},
-{id:53,name:'未確認',rarity:'未確認',desc:'まだ記録されていない、正体不明の宇宙魚。'}
+{id:52,name:'ニュートリノハオリムシ',rarity:'まぼろし',desc:'ほとんど何にも反応しない「ニュートリノ」を栄養にしているとされるハオリムシ。数百年に一度しか姿を現さない。'}
 ];
 
-// 魚データと画像データを分離したまま連携する
-const imageScript=document.createElement('script');
-imageScript.src='fish-images.js';
-document.head.appendChild(imageScript);
-
+// 画像連携は現在使用しない。魚図鑑はテキスト表示のみ。
 // index.html側の古いゲージ判定を上書きする専用処理を読み込む
 const gaugeScript=document.createElement('script');
 gaugeScript.src='gauge.js';
