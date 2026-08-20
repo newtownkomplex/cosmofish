@@ -76,8 +76,7 @@
     group.forEach(f=>{
       const count=counts[f.id]||0;
       const card=document.createElement('button');card.type='button';card.className=`card ${count?'':'locked'}`;
-      // 捕獲数は「現在までに捕まえた数」だけを表示し、解析必要回数は表示しない。
-      card.innerHTML=`<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count?escapeHtml(f.name):'？？？？？？'}</div><div class="no" style="margin-top:8px">${count}</div>`;
+      card.innerHTML=`<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count?escapeHtml(f.name):'？？？？？？'}</div><div class="no" style="margin-top:8px">${count}匹</div>`;
       const rec=sizes[f.id];
       if(rec){
         const records=document.createElement('div');records.className='book-size-records';
@@ -93,12 +92,8 @@
 
   function setupBook(){
     const list=listEl();if(!list||typeof fishData==='undefined')return;
-    // 音楽ボタンはaudio.jsだけが管理する。重複して存在していた場合は1個に整理する。
-    const musicButtons=[...list.querySelectorAll('#musicToggle')];
-    musicButtons.slice(1).forEach(b=>{
-      const wrap=b.closest('.music-toggle-wrap')||b.parentElement;
-      if(wrap)wrap.remove();else b.remove();
-    });
+    // 音楽ON/OFF UIは廃止。図鑑内に残っている旧ボタンやラッパーをすべて削除する。
+    list.querySelectorAll('#musicToggle,.music-toggle-wrap').forEach(el=>el.remove());
 
     let tabsBar=list.querySelector('.book-tabs');
     let title=list.querySelector('.book-rarity-title');
