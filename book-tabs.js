@@ -44,7 +44,9 @@
 
   function buildTabsOnce(){
     const list=listEl(); if(!list)return null;
-    list.querySelectorAll('.book-tabs').forEach(el=>el.remove());
+    list.querySelectorAll('.book-tabs').forEach((el,i)=>{if(i>0)el.remove()});
+    const existing=list.querySelector('.book-tabs');
+    if(existing)return existing;
     const bar=document.createElement('div');bar.className='book-tabs';
     tabs.forEach(t=>{
       const b=document.createElement('button');
@@ -53,7 +55,6 @@
       b.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();
         activeTab=t.key;localStorage.setItem(tabKey,activeTab);
-        // ここでは render() を呼ばない。図鑑全体を再構築しない。
         renderFishGroup();
       });
       bar.appendChild(b);
@@ -75,7 +76,8 @@
     group.forEach(f=>{
       const count=counts[f.id]||0;
       const card=document.createElement('button');card.type='button';card.className=`card ${count?'':'locked'}`;
-      card.innerHTML=`<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count?escapeHtml(f.name):'？？？？？？'}</div><div class="no" style="margin-top:8px">${count} / ${need}</div>`;
+      // 捕獲数は「現在までに捕まえた数」だけを表示し、解析必要回数は表示しない。
+      card.innerHTML=`<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count?escapeHtml(f.name):'？？？？？？'}</div><div class="no" style="margin-top:8px">${count}</div>`;
       const rec=sizes[f.id];
       if(rec){
         const records=document.createElement('div');records.className='book-size-records';
@@ -91,14 +93,19 @@
 
   function setupBook(){
     const list=listEl();if(!list||typeof fishData==='undefined')return;
-    // 既存の音楽ボタンは絶対に消さず、図鑑専用領域だけを作り直す。
+    // 音楽ボタンはaudio.jsだけが管理する。重複して存在していた場合は1個に整理する。
+    const musicButtons=[...list.querySelectorAll('#musicToggle')];
+    musicButtons.slice(1).forEach(b=>{
+      const wrap=b.closest('.music-toggle-wrap')||b.parentElement;
+      if(wrap)wrap.remove();else b.remove();
+    });
+
     let tabsBar=list.querySelector('.book-tabs');
     let title=list.querySelector('.book-rarity-title');
     let grid=list.querySelector('.book-fish-grid');
     let reset=list.querySelector('.book-reset');
 
     if(!tabsBar){
-      // 以前の図鑑描画で生成された .rarity / .grid / reset-area は取り除く。
       list.querySelectorAll('.rarity,.reset-area').forEach(el=>el.remove());
       list.querySelectorAll('.grid').forEach(el=>el.remove());
       tabsBar=buildTabsOnce();
@@ -112,7 +119,6 @@
     renderFishGroup();
   }
 
-  // index.html の古い render はここから使わない。図鑑はこのファイルだけで管理する。
   window.render=setupBook;
   const openBook=document.getElementById('openBook');
   if(openBook)openBook.addEventListener('click',()=>setTimeout(setupBook,0));
