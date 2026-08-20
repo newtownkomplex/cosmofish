@@ -92,8 +92,8 @@
 
   function setupBook(){
     const list=listEl();if(!list||typeof fishData==='undefined')return;
-    // 音楽ON/OFF UIは廃止。図鑑内に残っている旧ボタンやラッパーをすべて削除する。
-    list.querySelectorAll('#musicToggle,.music-toggle-wrap').forEach(el=>el.remove());
+    // 音楽ON/OFF UIは完全撤去。図鑑内に残っている旧ボタン・ラッパー・音楽操作用要素を削除する。
+    list.querySelectorAll('#musicToggle,.music-toggle-wrap,[data-music-toggle],.music-control,.music-controls').forEach(el=>el.remove());
 
     let tabsBar=list.querySelector('.book-tabs');
     let title=list.querySelector('.book-rarity-title');
