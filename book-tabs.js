@@ -11,6 +11,7 @@
 
   const style=document.createElement('style');
   style.textContent=`
+    html,body{background-color:#19383b!important;background-image:linear-gradient(rgba(255,245,0,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(255,245,0,.10) 1px,transparent 1px)!important;background-size:44px 44px!important}
     .book-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #fff500;margin-bottom:20px}
     .book-tab{border:0;border-right:1px solid #fff500;background:#102a2d;color:#f7f5d9;padding:12px 6px;font-size:13px;letter-spacing:.08em}
     .book-tab:last-child{border-right:0}.book-tab.active{background:#fff500;color:#19383b}
@@ -92,7 +93,6 @@
 
   function setupBook(){
     const list=listEl();if(!list||typeof fishData==='undefined')return;
-    // 音楽ON/OFF UIは完全撤去。図鑑内に残っている旧ボタン・ラッパー・音楽操作用要素を削除する。
     list.querySelectorAll('#musicToggle,.music-toggle-wrap,[data-music-toggle],.music-control,.music-controls').forEach(el=>el.remove());
 
     let tabsBar=list.querySelector('.book-tabs');
