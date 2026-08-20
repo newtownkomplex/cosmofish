@@ -54,6 +54,11 @@ const fishData=[
 {id:53,name:'未確認',rarity:'未確認',desc:'まだ記録されていない、正体不明の宇宙魚。'}
 ];
 
+// 魚データと画像データを分離したまま連携する
+const imageScript=document.createElement('script');
+imageScript.src='fish-images.js';
+document.head.appendChild(imageScript);
+
 // index.html側の古いゲージ判定を上書きする専用処理を読み込む
 const gaugeScript=document.createElement('script');
 gaugeScript.src='gauge.js';
