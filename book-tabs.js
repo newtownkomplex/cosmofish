@@ -1,16 +1,16 @@
 (() => {
   const tabs = [
-    { key: 'ふつう', label: 'ふつう', cls: 'common' },
-    { key: 'めずらしい', label: 'めずらしい', cls: 'rare' },
-    { key: 'まぼろし', label: 'まぼろし', cls: 'mythical' },
-    { key: '未確認', label: '未確認', cls: 'unconfirmed' }
+    { key:'ふつう', label:'ふつう', cls:'common' },
+    { key:'めずらしい', label:'めずらしい', cls:'rare' },
+    { key:'まぼろし', label:'まぼろし', cls:'mythical' },
+    { key:'未確認', label:'未確認', cls:'unconfirmed' }
   ];
-  const tabKey = 'cosmofish-book-tab';
-  let activeTab = localStorage.getItem(tabKey) || 'ふつう';
-  if (!tabs.some(t => t.key === activeTab)) activeTab = 'ふつう';
+  const tabKey='cosmofish-book-tab';
+  let activeTab=localStorage.getItem(tabKey)||'ふつう';
+  if(!tabs.some(t=>t.key===activeTab)) activeTab='ふつう';
 
-  const style = document.createElement('style');
-  style.textContent = `
+  const style=document.createElement('style');
+  style.textContent=`
     .book-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #fff500;margin-bottom:20px}
     .book-tab{border:0;border-right:1px solid #fff500;background:#102a2d;color:#f7f5d9;padding:12px 6px;font-size:13px;letter-spacing:.08em}
     .book-tab:last-child{border-right:0}.book-tab.active{background:#fff500;color:#19383b}
@@ -25,93 +25,95 @@
   `;
   document.head.appendChild(style);
 
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const listEl=()=>document.getElementById('list');
+  const escapeHtml=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const getSizes=()=>{try{return JSON.parse(localStorage.getItem('cosmofish-fish-sizes')||'{}')}catch(e){return {}}};
+  const needForRarity=r=>r==='ふつう'?3:r==='めずらしい'?2:1;
+
+  function updateTabCounts(){
+    const list=listEl(); if(!list||typeof fishData==='undefined')return;
+    list.querySelectorAll('.book-tab').forEach(btn=>{
+      const r=btn.dataset.rarity;
+      const group=fishData.filter(f=>f.rarity===r);
+      const need=needForRarity(r);
+      const unlocked=group.filter(f=>(counts[f.id]||0)>=need).length;
+      const count=btn.querySelector('.book-tab-count');
+      if(count)count.textContent=`${unlocked}/${group.length}`;
+    });
   }
 
-  function getSizeRecords() {
-    try { return JSON.parse(localStorage.getItem('cosmofish-fish-sizes') || '{}'); }
-    catch (e) { return {}; }
-  }
-
-  function sizeLine(label, size) { return `${label}：${size ? size.name : '—'}`; }
-
-  function renderBook() {
-    const list = document.getElementById('list');
-    if (!list || typeof fishData === 'undefined') return;
-
-    const previousMusic = document.getElementById('musicToggle');
-    const musicParent = previousMusic ? previousMusic.parentElement : null;
-
-    list.replaceChildren();
-
-    const bar = document.createElement('div');
-    bar.className = 'book-tabs';
-    tabs.forEach(t => {
-      const group = fishData.filter(f => f.rarity === t.key);
-      const need = needFor(t.key);
-      const unlocked = group.filter(f => (counts[f.id] || 0) >= need).length;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = `book-tab ${t.cls}${activeTab === t.key ? ' active' : ''}`;
-      b.innerHTML = `${t.label}<span class="book-tab-count">${unlocked}/${group.length}</span>`;
-      b.addEventListener('click', () => {
-        activeTab = t.key;
-        localStorage.setItem(tabKey, activeTab);
-        renderBook();
+  function buildTabsOnce(){
+    const list=listEl(); if(!list)return null;
+    list.querySelectorAll('.book-tabs').forEach(el=>el.remove());
+    const bar=document.createElement('div');bar.className='book-tabs';
+    tabs.forEach(t=>{
+      const b=document.createElement('button');
+      b.type='button';b.className=`book-tab ${t.cls}${t.key===activeTab?' active':''}`;b.dataset.rarity=t.key;
+      b.innerHTML=`${t.label}<span class="book-tab-count"></span>`;
+      b.addEventListener('click',e=>{
+        e.preventDefault();e.stopPropagation();
+        activeTab=t.key;localStorage.setItem(tabKey,activeTab);
+        // ここでは render() を呼ばない。図鑑全体を再構築しない。
+        renderFishGroup();
       });
       bar.appendChild(b);
     });
-    list.appendChild(bar);
-
-    const group = fishData.filter(f => f.rarity === activeTab);
-    const need = needFor(activeTab);
-    const title = document.createElement('h3');
-    title.className = 'book-rarity-title';
-    title.textContent = `${activeTab}　${group.filter(f => (counts[f.id] || 0) >= need).length} / ${group.length}`;
-    list.appendChild(title);
-
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    const sizeRecords = getSizeRecords();
-    group.forEach(f => {
-      const count = counts[f.id] || 0;
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = `card ${count ? '' : 'locked'}`;
-      card.innerHTML = `<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count ? escapeHtml(f.name) : '？？？？？？'}</div><div class="no" style="margin-top:8px">${count} / ${need}</div>`;
-      const rec = sizeRecords[f.id];
-      if (rec) {
-        const records = document.createElement('div');
-        records.className = 'book-size-records';
-        const bestClass = rec.best?.name === '特大' ? 'giant' : '';
-        const minClass = rec.min?.name === '稚魚' ? 'fry' : '';
-        records.innerHTML = `<div class="${bestClass}">${sizeLine('最大', rec.best)}</div><div class="${minClass}">${sizeLine('最小', rec.min)}</div>`;
-        card.appendChild(records);
-      }
-      if (count) card.addEventListener('click', () => showDetail(f, count, need));
-      grid.appendChild(card);
-    });
-    list.appendChild(grid);
-
-    const resetArea = document.createElement('div');
-    resetArea.className = 'book-reset';
-    resetArea.innerHTML = '<button type="button" class="reset-btn" id="resetButton">緊急脱出</button>';
-    list.appendChild(resetArea);
-    const resetButton = document.getElementById('resetButton');
-    if (resetButton && typeof resetConfirm !== 'undefined') resetButton.onclick = () => resetConfirm.classList.remove('hidden');
-
-    if (previousMusic) {
-      const wrap = musicParent || document.createElement('div');
-      if (!wrap.parentElement) {
-        wrap.style.cssText = 'margin:0 0 24px;padding-bottom:20px;border-bottom:1px solid #fff500;';
-        list.prepend(wrap);
-      } else {
-        list.prepend(wrap);
-      }
-      if (!wrap.contains(previousMusic)) wrap.appendChild(previousMusic);
-    }
+    list.prepend(bar);updateTabCounts();return bar;
   }
 
-  window.render = renderBook;
+  function renderFishGroup(){
+    const list=listEl();if(!list||typeof fishData==='undefined')return;
+    const title=list.querySelector('.book-rarity-title');
+    const grid=list.querySelector('.book-fish-grid');
+    if(!title||!grid)return;
+    const group=fishData.filter(f=>f.rarity===activeTab);
+    const need=needForRarity(activeTab);
+    const unlocked=group.filter(f=>(counts[f.id]||0)>=need).length;
+    title.textContent=`${activeTab}　${unlocked} / ${group.length}`;
+    grid.replaceChildren();
+    const sizes=getSizes();
+    group.forEach(f=>{
+      const count=counts[f.id]||0;
+      const card=document.createElement('button');card.type='button';card.className=`card ${count?'':'locked'}`;
+      card.innerHTML=`<div class="no">No.${String(f.id).padStart(2,'0')}</div><div class="name">${count?escapeHtml(f.name):'？？？？？？'}</div><div class="no" style="margin-top:8px">${count} / ${need}</div>`;
+      const rec=sizes[f.id];
+      if(rec){
+        const records=document.createElement('div');records.className='book-size-records';
+        records.innerHTML=`<div class="${rec.best?.name==='特大'?'giant':''}">最大：${rec.best?escapeHtml(rec.best.name):'—'}</div><div class="${rec.min?.name==='稚魚'?'fry':''}">最小：${rec.min?escapeHtml(rec.min.name):'—'}</div>`;
+        card.appendChild(records);
+      }
+      if(count)card.addEventListener('click',()=>showDetail(f,count,need));
+      grid.appendChild(card);
+    });
+    list.querySelectorAll('.book-tab').forEach(b=>b.classList.toggle('active',b.dataset.rarity===activeTab));
+    updateTabCounts();
+  }
+
+  function setupBook(){
+    const list=listEl();if(!list||typeof fishData==='undefined')return;
+    // 既存の音楽ボタンは絶対に消さず、図鑑専用領域だけを作り直す。
+    let tabsBar=list.querySelector('.book-tabs');
+    let title=list.querySelector('.book-rarity-title');
+    let grid=list.querySelector('.book-fish-grid');
+    let reset=list.querySelector('.book-reset');
+
+    if(!tabsBar){
+      // 以前の図鑑描画で生成された .rarity / .grid / reset-area は取り除く。
+      list.querySelectorAll('.rarity,.reset-area').forEach(el=>el.remove());
+      list.querySelectorAll('.grid').forEach(el=>el.remove());
+      tabsBar=buildTabsOnce();
+    }
+    if(!title){title=document.createElement('h3');title.className='book-rarity-title';tabsBar.after(title)}
+    if(!grid){grid=document.createElement('div');grid.className='grid book-fish-grid';title.after(grid)}
+    if(!reset){
+      reset=document.createElement('div');reset.className='book-reset';reset.innerHTML='<button type="button" class="reset-btn" id="resetButton">緊急脱出</button>';list.appendChild(reset);
+      const rb=document.getElementById('resetButton');if(rb&&typeof resetConfirm!=='undefined')rb.onclick=()=>resetConfirm.classList.remove('hidden');
+    }
+    renderFishGroup();
+  }
+
+  // index.html の古い render はここから使わない。図鑑はこのファイルだけで管理する。
+  window.render=setupBook;
+  const openBook=document.getElementById('openBook');
+  if(openBook)openBook.addEventListener('click',()=>setTimeout(setupBook,0));
 })();
