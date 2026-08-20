@@ -25,7 +25,30 @@
 
   window.shadows=function(){spots.forEach(s=>s.replaceChildren());const n=4+Math.floor(Math.random()*3);[...spots].sort(()=>Math.random()-.5).slice(0,n).forEach(s=>{const el=document.createElement('div'),r=Math.random();el.className='shadow '+(r<.0005?'gold':r<.09?'large':'medium');s.appendChild(el)})};
 
-  pond.addEventListener('pointerdown',(e)=>{const s=e.target.closest('.shadow');if(!s||active)return;e.preventDefault();e.stopImmediatePropagation();active=true;currentSize=s.classList.contains('gold')?'gold':s.classList.contains('large')?'large':'medium';s.style.display='none';const direction=Math.random()<0.5?1:-1;pos=direction===1?0:100;cursor.style.left=pos+'%';status.textContent='中央の黄色い範囲でTAP!';gaugeStart=performance.now();function move(now){if(!active)return;const elapsed=(now-gaugeStart)%1000;pos=direction===1?(elapsed<500?(elapsed/500)*100:(1-(elapsed-500)/500)*100):(elapsed<500?100-(elapsed/500)*100:(elapsed-500)/500*100);cursor.style.left=pos+'%';raf=requestAnimationFrame(move)}raf=requestAnimationFrame(move)},{capture:true});
+  // 旧index.htmlの左→右固定 fishStart を確実に上書きするため、document の capture で先に処理する。
+  document.addEventListener('pointerdown',(e)=>{
+    const s=e.target.closest('.shadow');
+    if(!s||active)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    active=true;
+    currentSize=s.classList.contains('gold')?'gold':s.classList.contains('large')?'large':'medium';
+    s.style.display='none';
+    const direction=Math.random()<0.5?1:-1;
+    pos=direction===1?0:100;
+    cursor.style.left=pos+'%';
+    status.textContent=direction===1?'ゲージ：→':'ゲージ：←';
+    gaugeStart=performance.now();
+    function move(now){
+      if(!active)return;
+      const elapsed=(now-gaugeStart)%1000;
+      pos=direction===1
+        ?(elapsed<500?(elapsed/500)*100:(1-(elapsed-500)/500)*100)
+        :(elapsed<500?100-(elapsed/500)*100:(elapsed-500)/500*100);
+      cursor.style.left=pos+'%';
+      raf=requestAnimationFrame(move);
+    }
+    raf=requestAnimationFrame(move);
+  },{capture:true});
 
   const originalShowDetail=window.showDetail;if(originalShowDetail)window.showDetail=function(f,count,need){originalShowDetail(f,count,need);const desc=document.getElementById('dd');let sizeEl=document.getElementById('detailSize');if(!sizeEl){sizeEl=document.createElement('div');sizeEl.id='detailSize';sizeEl.className='detail-size';desc.parentNode.insertBefore(sizeEl,desc)}const rec=sizeRecords[f.id];sizeEl.innerHTML=rec?sizeSpan('最大',rec.best)+sizeSpan('最小',rec.min):sizeSpan('最大',null)+sizeSpan('最小',null)};
 
