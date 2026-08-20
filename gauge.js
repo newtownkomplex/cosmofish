@@ -14,96 +14,46 @@
   `;
   document.head.appendChild(style);
 
-  const gauge=document.getElementById('gauge'),status=document.getElementById('status'),catchBox=document.getElementById('catch'),saveKey='cosmofish-catches',sizeKey='cosmofish-fish-sizes';
-  let sizeRecords={};
+  const gauge=document.getElementById('gauge'),status=document.getElementById('status'),catchBox=document.getElementById('catch'),saveKey='cosmofish-catches',sizeKey='cosmofish-fish-sizes',failKey='cosmofish-failed-catches';
+  let sizeRecords={},failedCatches=Number(localStorage.getItem(failKey)||0);
   try{sizeRecords=JSON.parse(localStorage.getItem(sizeKey)||'{}')}catch(e){}
 
-  const sizeTable=[
-    {name:'特大',rank:5,chance:1},
-    {name:'大',rank:4,chance:9},
-    {name:'中',rank:3,chance:60},
-    {name:'小',rank:2,chance:29.5},
-    {name:'稚魚',rank:1,chance:.5}
-  ];
-  function pickFishSize(){
-    const x=Math.random()*100;let sum=0;
-    for(const s of sizeTable){sum+=s.chance;if(x<sum)return s}
-    return sizeTable[2];
-  }
-  function getBestSize(id){return sizeRecords[id]?.best||null}
-  function saveSize(id,size){
-    const old=sizeRecords[id]||{};
-    const previousBest=old.best||null;
-    const isRecord=size.rank>=2 && (!previousBest || size.rank>previousBest.rank);
-    const next={best:previousBest,latest:size.name};
-    if(isRecord)next.best=size;
-    sizeRecords[id]=next;
-    localStorage.setItem(sizeKey,JSON.stringify(sizeRecords));
-    return {isRecord,previousBest};
-  }
-  function sizeText(id){
-    const d=sizeRecords[id];
-    if(!d)return '';
-    if(d.best)return '最大記録：'+d.best.name;
-    if(d.latest==='稚魚')return '稚魚';
-    return '';
+  const sizeTable=[{name:'特大',rank:5,chance:1},{name:'大',rank:4,chance:9},{name:'中',rank:3,chance:60},{name:'小',rank:2,chance:29.5},{name:'稚魚',rank:1,chance:.5}];
+  function pickFishSize(){const x=Math.random()*100;let sum=0;for(const s of sizeTable){sum+=s.chance;if(x<sum)return s}return sizeTable[2]}
+  function saveSize(id,size){const old=sizeRecords[id]||{},previousBest=old.best||null,isRecord=size.rank>=2&&(!previousBest||size.rank>previousBest.rank),next={best:previousBest,latest:size.name};if(isRecord)next.best=size;sizeRecords[id]=next;localStorage.setItem(sizeKey,JSON.stringify(sizeRecords));return{isRecord,previousBest}}
+  function forceGoldAfterFailureMilestone(){
+    if(failedCatches<10)return;
+    failedCatches=0;localStorage.setItem(failKey,'0');
+    shadows();
+    const available=spots.filter(s=>s.querySelector('.shadow'));
+    const target=(available.length?available:spots)[Math.floor(Math.random()*(available.length?available.length:spots.length))];
+    if(target){target.replaceChildren();const gold=document.createElement('div');gold.className='shadow gold';target.appendChild(gold)}
+    status.textContent='金色の魚影が出現した……';
   }
 
   gauge.addEventListener('pointerdown',(e)=>{
-    if(!active)return;
-    e.preventDefault();e.stopImmediatePropagation();
-    const barPosition=pos,targetLeft=40,targetRight=60;
-    active=false;cancelAnimationFrame(raf);
+    if(!active)return;e.preventDefault();e.stopImmediatePropagation();
+    const barPosition=pos,targetLeft=40,targetRight=60;active=false;cancelAnimationFrame(raf);
     if(barPosition>=targetLeft&&barPosition<=targetRight){
-      const f=pickFish(currentSize),previousCount=counts[f.id]||0;
-      const caughtSize=pickFishSize();
-      const record=saveSize(f.id,caughtSize);
+      const f=pickFish(currentSize),previousCount=counts[f.id]||0,caughtSize=pickFishSize(),record=saveSize(f.id,caughtSize);
+      if(currentSize==='gold'){failedCatches=0;localStorage.setItem(failKey,'0')}
       counts[f.id]=previousCount+1;localStorage.setItem(saveKey,JSON.stringify(counts));
-      const need=needFor(f.rarity),isNew=previousCount===0,isAnalysisComplete=previousCount<need&&counts[f.id]>=need;
-      let labels='';
+      const need=needFor(f.rarity),isNew=previousCount===0,isAnalysisComplete=previousCount<need&&counts[f.id]>=need;let labels='';
       if(isNew)labels+='<div class="catch-label new-species">新種捕獲</div>';
       if(isAnalysisComplete)labels+='<div class="catch-label analysis-complete">解析完了</div>';
-      if(caughtSize.name==='稚魚')labels+='<div class="catch-label fry">稚魚</div>';
-      else if(record.isRecord)labels+='<div class="catch-label new-record">新記録</div>';
-      labels+='<div>釣り成功！　<span class="'+rarityClass(f.rarity)+'">'+f.name+'</span></div>';
-      labels+='<div class="catch-size">サイズ：'+caughtSize.name+'</div>';
-      labels+='<button type="button" class="catch-recover">回収</button>';
+      if(caughtSize.name==='稚魚')labels+='<div class="catch-label fry">稚魚</div>';else if(record.isRecord)labels+='<div class="catch-label new-record">新記録</div>';
+      labels+='<div>釣り成功！　<span class="'+rarityClass(f.rarity)+'">'+f.name+'</span></div><div class="catch-size">サイズ：'+caughtSize.name+'</div><button type="button" class="catch-recover">回収</button>';
       catchBox.innerHTML=labels;catchBox.classList.remove('hidden');status.classList.add('success');status.textContent='捕獲しました（'+counts[f.id]+'回目）';
-      const recover=catchBox.querySelector('.catch-recover');recover.addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();catchBox.classList.add('hidden');status.classList.remove('success');status.textContent='魚影をタップして釣りを開始';shadows()});
-    }else{status.textContent='逃げられた……';setTimeout(()=>{status.textContent='魚影をタップして釣りを開始';shadows()},900)}
+      catchBox.querySelector('.catch-recover').addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();catchBox.classList.add('hidden');status.classList.remove('success');status.textContent='魚影をタップして釣りを開始';shadows()});
+    }else{
+      failedCatches++;localStorage.setItem(failKey,String(failedCatches));
+      if(failedCatches>=10){forceGoldAfterFailureMilestone()}
+      else{status.textContent='逃げられた……';setTimeout(()=>{status.textContent='魚影をタップして釣りを開始';shadows()},900)}
+    }
   },{capture:true});
 
-  // 金色の魚影は0.05%。それ以外は中91%、大8.95%。
-  window.shadows=function(){
-    spots.forEach(s=>s.replaceChildren());
-    const n=4+Math.floor(Math.random()*3);
-    [...spots].sort(()=>Math.random()-.5).slice(0,n).forEach(s=>{
-      const el=document.createElement('div'),r=Math.random();
-      el.className='shadow '+(r<.0005?'gold':r<.09?'large':'medium');s.appendChild(el);
-    });
-  };
+  window.shadows=function(){spots.forEach(s=>s.replaceChildren());const n=4+Math.floor(Math.random()*3);[...spots].sort(()=>Math.random()-.5).slice(0,n).forEach(s=>{const el=document.createElement('div'),r=Math.random();el.className='shadow '+(r<.0005?'gold':r<.09?'large':'medium');s.appendChild(el)})};
 
-  // 図鑑詳細に最大サイズ記録を追加。
-  const originalShowDetail=window.showDetail;
-  window.showDetail=function(f,count,need){
-    originalShowDetail(f,count,need);
-    const detailEl=document.getElementById('detail');
-    const desc=document.getElementById('dd');
-    let sizeEl=document.getElementById('detailSize');
-    if(!sizeEl){sizeEl=document.createElement('div');sizeEl.id='detailSize';sizeEl.className='detail-size';desc.parentNode.insertBefore(sizeEl,desc)}
-    const rec=sizeRecords[f.id];
-    sizeEl.textContent=rec?(rec.best?'最大記録：'+rec.best.name:(rec.latest==='稚魚'?'稚魚':'')):'';
-  };
-
-  // 既存の図鑑ボタンは元のrenderを呼ぶため、カードに最大サイズ表示を追加。
-  const originalRender=window.render;
-  window.render=function(){
-    originalRender();
-    document.querySelectorAll('#list .card').forEach(card=>{
-      const no=card.querySelector('.no');if(!no)return;
-      const m=no.textContent.match(/No\.(\d+)/);if(!m)return;
-      const id=Number(m[1]),rec=sizeRecords[id];if(!rec)return;
-      const el=document.createElement('div');el.className='no';el.style.marginTop='6px';el.textContent=rec.best?'最大：'+rec.best.name:(rec.latest==='稚魚'?'稚魚':'');card.appendChild(el);
-    });
-  };
+  const originalShowDetail=window.showDetail;if(originalShowDetail)window.showDetail=function(f,count,need){originalShowDetail(f,count,need);const desc=document.getElementById('dd');let sizeEl=document.getElementById('detailSize');if(!sizeEl){sizeEl=document.createElement('div');sizeEl.id='detailSize';sizeEl.className='detail-size';desc.parentNode.insertBefore(sizeEl,desc)}const rec=sizeRecords[f.id];sizeEl.textContent=rec?(rec.best?'最大記録：'+rec.best.name:(rec.latest==='稚魚'?'稚魚':'')):''};
+  const originalRender=window.render;if(originalRender)window.render=function(){originalRender();document.querySelectorAll('#list .card').forEach(card=>{const no=card.querySelector('.no');if(!no)return;const m=no.textContent.match(/No\.(\d+)/);if(!m)return;const id=Number(m[1]),rec=sizeRecords[id];if(!rec)return;const el=document.createElement('div');el.className='no';el.style.marginTop='6px';el.textContent=rec.best?'最大：'+rec.best.name:(rec.latest==='稚魚'?'稚魚':'');card.appendChild(el)})};
 })();
