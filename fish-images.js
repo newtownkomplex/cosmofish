@@ -1,7 +1,8 @@
 // 魚図鑑用の画像ファイル対応表
 // 魚データのIDと画像ファイルを1対1で管理する。
 const fishImages = {
-  1: 'images/fish-001.svg'
+  1: 'images/fish-001.svg',
+  2: 'images/fish-002.svg'
 };
 
 function getFishImage(fish) {
