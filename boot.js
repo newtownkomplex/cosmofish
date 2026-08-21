@@ -9,18 +9,27 @@
     </div>`;
   document.body.appendChild(overlay);
 
+  // 重要: 釣りスポットのレイアウトには一切触れない。
+  // 配置は index.html の .pond の 3x2 CSS Grid にのみ任せる。
   const style = document.createElement('style');
   style.textContent = `
-    /* 釣りスポットの位置はindex.htmlの3x2グリッドに完全に任せる。
-       absolute / left / top / translate は一切上書きしない。 */
-    .pond { position:relative !important; display:grid !important; }
-    .spot { position:relative !important; margin:auto !important; left:auto !important; top:auto !important; transform:none !important; }
-    .game-reveal .header,.game-reveal .book-button,.game-reveal .pond,.game-reveal .gauge,.game-reveal .status { animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important; }
+    .game-reveal .header,
+    .game-reveal .book-button,
+    .game-reveal .pond,
+    .game-reveal .gauge,
+    .game-reveal .status {
+      animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important;
+    }
     .game-reveal .book-button { animation-delay:.12s !important; }
     .game-reveal .pond { animation-delay:.22s !important; }
     .game-reveal .gauge { animation-delay:.38s !important; }
     .game-reveal .status { animation-delay:.5s !important; }
-    @keyframes gameFloatIn { 0% { opacity:0; filter:brightness(.15) blur(2px); transform:translateY(10px); } 45% { opacity:.42; filter:brightness(.48) blur(.8px); } 75% { opacity:.78; filter:brightness(.78) blur(0); transform:translateY(2px); } 100% { opacity:1; filter:brightness(1) blur(0); transform:translateY(0); } }
+    @keyframes gameFloatIn {
+      0% { opacity:0; filter:brightness(.15) blur(2px); }
+      45% { opacity:.42; filter:brightness(.48) blur(.8px); }
+      75% { opacity:.78; filter:brightness(.78) blur(0); }
+      100% { opacity:1; filter:brightness(1) blur(0); }
+    }
   `;
   document.head.appendChild(style);
 
@@ -29,7 +38,10 @@
   const fill = document.getElementById('bootFill');
   const status = document.getElementById('bootStatus');
   let i = 0;
-  const typeTimer = setInterval(() => { textEl.textContent = text.slice(0, ++i); if (i >= text.length) clearInterval(typeTimer); }, 120);
+  const typeTimer = setInterval(() => {
+    textEl.textContent = text.slice(0, ++i);
+    if (i >= text.length) clearInterval(typeTimer);
+  }, 120);
 
   const start = performance.now(), duration = 5000;
   function load(now) {
@@ -45,6 +57,4 @@
     }, 180);
   }
   requestAnimationFrame(load);
-
-  /* book-ui.jsはindex.html側で一度だけ読み込むため、ここでは追加しない。 */
 })();
