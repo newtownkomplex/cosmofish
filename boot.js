@@ -11,10 +11,7 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    /* 最終レイアウト固定：gauge.js の旧スポット配置を上書き */
-    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:2%!important;padding:1%!important;animation:none!important}
-    .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;margin:auto!important;justify-self:center!important;align-self:center!important;transform:none!important;animation:none!important}
-    .shadow{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important}
+    /* 起動画面は釣り場のレイアウトを一切変更しない */
     .game-reveal .header,
     .game-reveal .book-button,
     .game-reveal .pond,
