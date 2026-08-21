@@ -4,19 +4,9 @@
     .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(3,1fr)!important;gap:0!important;padding:0!important;align-items:center!important;justify-items:center!important;width:100%!important;}
     .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0!important;justify-self:center!important;align-self:center!important;width:min(264px,30vw)!important;max-width:264px!important;aspect-ratio:1!important;animation:none!important;}
     .spot:nth-child(1){grid-column:4;grid-row:1}.spot:nth-child(2){grid-column:3;grid-row:2}.spot:nth-child(3){grid-column:5;grid-row:2}.spot:nth-child(4){grid-column:2;grid-row:3}.spot:nth-child(5){grid-column:4;grid-row:3}.spot:nth-child(6){grid-column:6;grid-row:3}
-    @media(max-width:700px){.pond{grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(3,1fr)!important}.spot{width:min(264px,30vw,145px)!important;max-width:145px!important}}
-    .catch{grid-template-rows:auto auto auto auto auto!important;gap:12px!important;padding:30px!important;text-align:center!important;color:#fff500!important}
-    .catch-label{font-size:clamp(16px,3vw,28px);letter-spacing:.18em;color:#f7f5d9}
-    .catch-label.new-species{color:#fff500}.catch-label.analysis-complete{color:#72d9ff}.catch-label.new-record{color:#c084ff}.catch-label.fry{color:#ff8fc7}
-    .catch-success{font-size:clamp(18px,3vw,30px);letter-spacing:.08em;color:#fff500}
-    .catch-fish-name{font-size:clamp(22px,4vw,38px);letter-spacing:.06em;color:#fff500!important;display:flex;flex-direction:column;align-items:center;gap:4px}
-    .catch-fish-name.common,.catch-fish-name.rare,.catch-fish-name.mythical{color:#fff500!important}
-    .catch-rarity{display:block;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:.12em;margin:0;color:#f7f5d9}
-    .catch-rarity.common{color:#ff4b4b!important}.catch-rarity.rare{color:#72d9ff!important}.catch-rarity.mythical{color:#c084ff!important}
-    .catch-size{font-size:clamp(14px,2.5vw,24px);color:#f7f5d9;letter-spacing:.08em}
-    .catch-recover{min-width:180px;padding:14px 32px;border:2px solid #fff500;background:#fff500;color:#19383b;font:inherit;cursor:pointer;letter-spacing:.08em}
-    .detail-size{margin:8px 0 12px;color:#fff500;font-size:11px;line-height:1.6;letter-spacing:.06em;display:flex;flex-direction:column;gap:3px}.size-record{display:block}.size-record.fry{color:#ff8fc7}.size-record.giant{color:#c084ff}.record-mark{color:#fff500;margin-left:10px;font-size:11px;letter-spacing:.1em}.fry-mark{color:#ff8fc7;margin-left:10px;font-size:11px}.size-records{font-size:8px;line-height:1.4;letter-spacing:.03em}
-    @media(max-width:700px){.pond{gap:0!important;padding:0!important}.spot{width:min(264px,30vw,145px)!important}.catch{padding:20px!important;gap:10px!important}.catch-recover{min-width:140px;padding:12px 24px}.detail-size{font-size:10px}.size-records{font-size:8px}.catch-rarity{font-size:20px}.catch-fish-name{font-size:28px}}
+    /* 釣り場全体を画面内に収める。スポット自体の大きさは変更しない */
+    .pond{padding-inline:7%!important;padding-block:4%!important;overflow:hidden!important;}
+    @media(max-width:700px){.pond{grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(3,1fr)!important;padding-inline:8%!important;padding-block:5%!important}.spot{width:min(264px,30vw,145px)!important;max-width:145px!important}}
   `;document.head.appendChild(style);
   const gauge=document.getElementById('gauge'),status=document.getElementById('status'),catchBox=document.getElementById('catch'),saveKey='cosmofish-catches',sizeKey='cosmofish-fish-sizes',failKey='cosmofish-failed-catches';
   let sizeRecords={},failedCatches=Number(localStorage.getItem(failKey)||0);try{sizeRecords=JSON.parse(localStorage.getItem(sizeKey)||'{}')}catch(e){}
