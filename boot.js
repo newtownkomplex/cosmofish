@@ -11,13 +11,15 @@
 
   const style = document.createElement('style');
   style.textContent = `
+    /* 最終レイアウト固定：gauge.js の旧スポット配置を上書き */
+    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:2%!important;padding:1%!important;animation:none!important}
+    .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;margin:auto!important;justify-self:center!important;align-self:center!important;transform:none!important;animation:none!important}
+    .shadow{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important}
     .game-reveal .header,
     .game-reveal .book-button,
     .game-reveal .pond,
     .game-reveal .gauge,
-    .game-reveal .status {
-      animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important;
-    }
+    .game-reveal .status { animation: gameFloatIn 1.8s cubic-bezier(.22,.61,.36,1) both !important; }
     .game-reveal .book-button { animation-delay:.12s !important; }
     .game-reveal .pond { animation-delay:.22s !important; }
     .game-reveal .gauge { animation-delay:.38s !important; }
