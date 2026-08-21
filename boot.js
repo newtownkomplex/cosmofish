@@ -9,8 +9,8 @@
     </div>`;
   document.body.appendChild(overlay);
 
-  // 重要: 釣りスポットのレイアウトには一切触れない。
-  // 配置は index.html の .pond の 3x2 CSS Grid にのみ任せる。
+  // 釣りスポットのレイアウトには一切触れない。
+  // 配置は index.html の 3x2 CSS Grid にのみ任せる。
   const style = document.createElement('style');
   style.textContent = `
     .game-reveal .header,
@@ -57,4 +57,57 @@
     }, 180);
   }
   requestAnimationFrame(load);
+
+  // 捕獲後の再出現位置を固定する。
+  // index.html の respawnSpots() は新しい魚影をランダムな .spot に追加するため、
+  // ここで「最初に存在したスポットの位置」を記憶し、再出現時も同じ .spot に戻す。
+  const pond = document.getElementById('pond');
+  if (pond) {
+    let fixedSlots = [];
+
+    const captureSlots = () => {
+      const spots = [...pond.querySelectorAll('.spot')];
+      const active = spots
+        .map((spot, index) => spot.querySelector('.shadow') ? index : null)
+        .filter(index => index !== null);
+      if (active.length) fixedSlots = active;
+    };
+
+    const restoreSlots = () => {
+      const spots = [...pond.querySelectorAll('.spot')];
+      if (!fixedSlots.length || !spots.length) return;
+
+      const shadows = spots
+        .flatMap(spot => [...spot.querySelectorAll('.shadow')]);
+
+      fixedSlots.forEach((slotIndex, i) => {
+        const shadow = shadows[i];
+        const target = spots[slotIndex];
+        if (!shadow || !target) return;
+        if (shadow.parentElement !== target) target.appendChild(shadow);
+        // respawnSpots() で全スポットを一度透明にした後、
+        // 同じ場所だけをフェードインさせる。
+        target.style.opacity = '1';
+      });
+    };
+
+    const observer = new MutationObserver(() => {
+      const spots = [...pond.querySelectorAll('.spot')];
+      const hasShadow = spots.some(spot => spot.querySelector('.shadow'));
+
+      // 初回生成時の位置を記憶。
+      if (!fixedSlots.length && hasShadow) {
+        captureSlots();
+        return;
+      }
+
+      // 捕獲後の再生成時は、ランダムに選ばれた位置を元の位置へ戻す。
+      if (fixedSlots.length && hasShadow) restoreSlots();
+    });
+
+    observer.observe(pond, { childList: true, subtree: true });
+
+    // 初回生成が完了してから位置をロック。
+    setTimeout(captureSlots, 900);
+  }
 })();
