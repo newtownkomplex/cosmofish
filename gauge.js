@@ -1,10 +1,10 @@
 (() => {
   const style=document.createElement('style');
   style.textContent=`
-    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(5,1fr)!important;grid-template-rows:repeat(3,1fr)!important;gap:0!important;padding:0!important;align-items:center!important;justify-items:center!important;width:116%!important;margin-left:-8%!important;overflow:hidden!important;}
-    .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0!important;justify-self:center!important;align-self:center!important;width:min(264px,30vw)!important;max-width:264px!important;aspect-ratio:1!important;animation:none!important;}
-    .spot:nth-child(1){grid-column:3;grid-row:1}.spot:nth-child(2){grid-column:2;grid-row:2}.spot:nth-child(3){grid-column:4;grid-row:2}.spot:nth-child(4){grid-column:1;grid-row:3}.spot:nth-child(5){grid-column:3;grid-row:3}.spot:nth-child(6){grid-column:5;grid-row:3}
-    @media(max-width:700px){.pond{grid-template-columns:repeat(5,1fr)!important;grid-template-rows:repeat(3,1fr)!important;width:116%!important;margin-left:-8%!important}.spot{width:min(264px,30vw,145px)!important;max-width:145px!important}}
+    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(3,1fr)!important;grid-template-rows:repeat(2,1fr)!important;gap:clamp(12px,2vw,28px)!important;padding:clamp(8px,2vw,18px)!important;align-items:center!important;justify-items:center!important;width:100%!important;margin:0!important;overflow:hidden!important;}
+    .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0!important;justify-self:center!important;align-self:center!important;width:min(264px,28vw)!important;max-width:264px!important;aspect-ratio:1!important;animation:none!important;}
+    .spot:nth-child(1){grid-column:1;grid-row:1}.spot:nth-child(2){grid-column:2;grid-row:1}.spot:nth-child(3){grid-column:3;grid-row:1}.spot:nth-child(4){grid-column:1;grid-row:2}.spot:nth-child(5){grid-column:2;grid-row:2}.spot:nth-child(6){grid-column:3;grid-row:2}
+    @media(max-width:700px){.pond{grid-template-columns:repeat(3,1fr)!important;grid-template-rows:repeat(2,1fr)!important;gap:8px!important;padding:4px!important}.spot{width:min(264px,27vw)!important;max-width:145px!important}}
   `;document.head.appendChild(style);
   const gauge=document.getElementById('gauge'),status=document.getElementById('status'),catchBox=document.getElementById('catch'),saveKey='cosmofish-catches',sizeKey='cosmofish-fish-sizes',failKey='cosmofish-failed-catches';
   let sizeRecords={},failedCatches=Number(localStorage.getItem(failKey)||0);try{sizeRecords=JSON.parse(localStorage.getItem(sizeKey)||'{}')}catch(e){}
