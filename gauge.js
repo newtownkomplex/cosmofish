@@ -1,8 +1,6 @@
 (() => {
   const style=document.createElement('style');
   style.textContent=`
-    /* 釣り場の位置はindex.htmlの3×2グリッドに完全に委任する。
-       ここではpond/spotのposition,left,top,transformを一切変更しない。 */
     .screen{animation:cosmofishScreenReveal 2.2s ease-out both!important}.header{animation:cosmofishYellowReveal 2s ease-out .15s both!important}.book-button{animation:cosmofishYellowFill 1.8s ease-out .25s both!important}.gauge{animation:cosmofishYellowReveal 2s ease-out .45s both!important}.status{animation:cosmofishYellowReveal 2s ease-out .6s both!important}
     @keyframes cosmofishScreenReveal{0%{opacity:.15}100%{opacity:1}}@keyframes cosmofishYellowReveal{0%{opacity:.05;filter:brightness(.18) blur(1px);box-shadow:0 0 0 rgba(255,245,0,0)}45%{opacity:.4;filter:brightness(.48) blur(.4px);box-shadow:0 0 22px rgba(255,245,0,.13)}100%{opacity:1;filter:brightness(1) blur(0);box-shadow:none}}@keyframes cosmofishYellowFill{0%{opacity:.05;filter:brightness(.18) blur(1px)}50%{opacity:.5;filter:brightness(.55) blur(.3px)}100%{opacity:1;filter:brightness(1) blur(0)}}
     .shadow.medium{width:34px!important;height:34px!important}.shadow.large,.shadow.gold{width:52px!important;height:52px!important}
@@ -17,11 +15,38 @@
   function pickFishSize(){const x=Math.random()*100;let sum=0;for(const s of sizeTable){sum+=s.chance;if(x<sum)return s}return sizeTable[2]}
   function saveSize(id,size){const old=sizeRecords[id]||{},previousBest=old.best||null,previousMin=old.min||null,isRecord=size.rank>=2&&(!previousBest||size.rank>previousBest.rank),isMin=!previousMin||size.rank<previousMin.rank,next={best:isRecord?size:previousBest,min:isMin?size:previousMin,latest:size.name};sizeRecords[id]=next;localStorage.setItem(sizeKey,JSON.stringify(sizeRecords));return{isRecord,isMin,previousBest,previousMin}}
   function sizeSpan(label,size){if(!size)return `<div class="size-record">${label}：—</div>`;const cls=size.name==='稚魚'?'fry':size.name==='特大'?'giant':'';return `<div class="size-record ${cls}">${label}：${size.name}</div>`}
-  function forceGoldAfterFailureMilestone(){if(failedCatches<10)return;failedCatches=0;localStorage.setItem(failKey,'0');const available=spots.filter(s=>s.querySelector('.shadow'));const target=(available.length?available:spots)[Math.floor(Math.random()*(available.length?available.length:spots.length))];if(target){const old=target.querySelector('.shadow');if(old)old.remove();const gold=document.createElement('div');gold.className='shadow gold';target.appendChild(gold)}status.textContent='金色の魚影が出現した……'}
+  function forceGoldAfterFailureMilestone(){if(failedCatches<10)return;failedCatches=0;localStorage.setItem(failKey,'0');const spots=[...document.querySelectorAll('#pond .spot')];const available=spots.filter(s=>s.querySelector('.shadow'));const target=(available.length?available:spots)[Math.floor(Math.random()*(available.length?available.length:spots.length))];if(target){const old=target.querySelector('.shadow');if(old)old.remove();const gold=document.createElement('div');gold.className='shadow gold';target.appendChild(gold)}status.textContent='金色の魚影が出現した……'}
 
   gauge.addEventListener('pointerdown',(e)=>{if(!active)return;e.preventDefault();e.stopImmediatePropagation();const barPosition=pos,targetLeft=40,targetRight=60;active=false;cancelAnimationFrame(raf);if(barPosition>=targetLeft&&barPosition<=targetRight){const f=pickFish(currentSize),previousCount=counts[f.id]||0,caughtSize=pickFishSize(),record=saveSize(f.id,caughtSize);if(currentSize==='gold'){failedCatches=0;localStorage.setItem(failKey,'0')}counts[f.id]=previousCount+1;localStorage.setItem(saveKey,JSON.stringify(counts));const need=needFor(f.rarity),isNew=previousCount===0,isAnalysisComplete=previousCount<need&&counts[f.id]>=need;let labels='';if(isNew)labels+='<div class="catch-label new-species">新種捕獲</div>';if(isAnalysisComplete)labels+='<div class="catch-label analysis-complete">解析完了</div>';if(caughtSize.name==='稚魚')labels+='<div class="catch-label fry">稚魚</div>';else if(record.isRecord)labels+='<div class="catch-label new-record">新記録</div>';const rarityClassName=rarityClass(f.rarity);const rarityText=f.rarity;labels+='<div class="catch-success">捕獲成功！</div><div class="catch-fish-name '+rarityClassName+'"><span class="catch-rarity '+rarityClassName+'">'+rarityText+'</span><span>'+f.name+'</span></div><div class="catch-size">サイズ：'+caughtSize.name+'</div><button type="button" class="catch-recover">回収</button>';catchBox.innerHTML=labels;catchBox.classList.remove('hidden');status.classList.add('success');status.textContent='捕獲しました（'+counts[f.id]+'回目）';catchBox.querySelector('.catch-recover').addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();catchBox.classList.add('hidden');status.classList.remove('success');status.textContent='魚影をタップして釣りを開始';shadows()})}else{failedCatches++;localStorage.setItem(failKey,String(failedCatches));if(failedCatches>=10)forceGoldAfterFailureMilestone();else{status.textContent='逃げられた……';setTimeout(()=>{status.textContent='魚影をタップして釣りを開始';shadows()},900)}}},{capture:true});
 
-  window.shadows=function(){const spots=[...document.querySelectorAll('#pond .spot')];const n=4+Math.floor(Math.random()*3);const slots=[...spots.keys()].sort(()=>Math.random()-.5).slice(0,n);spots.forEach((s,i)=>{s.style.opacity='0';});setTimeout(()=>{spots.forEach(s=>s.querySelector('.shadow')?.remove());slots.forEach(slot=>{const s=spots[slot];if(!s)return;const el=document.createElement('div'),r=Math.random();el.className='shadow '+(r<.0005?'gold':r<.09?'large':'medium');el.style.opacity='0';s.appendChild(el)});requestAnimationFrame(()=>requestAnimationFrame(()=>{spots.forEach(s=>s.style.opacity='1');spots.forEach(s=>{const sh=s.querySelector('.shadow');if(sh)sh.style.opacity='1'})}))},650)};
+  /* 捕獲後は現在のスポット集合を保存し、別の場所をランダム選択しない。 */
+  window.shadows=function(){
+    const spots=[...document.querySelectorAll('#pond .spot')];
+    const fixedSlots=spots.map((s,i)=>s.querySelector('.shadow')?i:null).filter(i=>i!==null);
+    if(!fixedSlots.length)return;
+    spots.forEach(s=>s.style.opacity='0');
+    setTimeout(()=>{
+      fixedSlots.forEach((slot,i)=>{
+        const s=spots[slot];
+        if(!s)return;
+        const old=s.querySelector('.shadow');
+        if(old)old.remove();
+        const el=document.createElement('div'),r=Math.random();
+        el.className='shadow '+(r<.0005?'gold':r<.09?'large':'medium');
+        el.style.opacity='0';
+        s.appendChild(el);
+      });
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        fixedSlots.forEach(slot=>{
+          const s=spots[slot];
+          if(!s)return;
+          s.style.opacity='1';
+          const sh=s.querySelector('.shadow');
+          if(sh)sh.style.opacity='1';
+        });
+      }));
+    },650);
+  };
 
   document.addEventListener('pointerdown',(e)=>{const s=e.target.closest('.shadow');if(!s||active)return;e.preventDefault();e.stopImmediatePropagation();active=true;currentSize=s.classList.contains('gold')?'gold':s.classList.contains('large')?'large':'medium';s.style.opacity='0';const direction=Math.random()<0.5?1:-1;pos=direction===1?0:100;cursor.style.left=pos+'%';status.textContent=direction===1?'ゲージ：→':'ゲージ：←';gaugeStart=performance.now();function move(now){if(!active)return;const elapsed=(now-gaugeStart)%1000;pos=direction===1?(elapsed<500?(elapsed/500)*100:(1-(elapsed-500)/500)*100):(elapsed<500?100-(elapsed/500)*100:(elapsed-500)/500*100);cursor.style.left=pos+'%';raf=requestAnimationFrame(move)}raf=requestAnimationFrame(move)},{capture:true});
 
