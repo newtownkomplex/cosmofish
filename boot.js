@@ -9,8 +9,6 @@
     </div>`;
   document.body.appendChild(overlay);
 
-  // 釣りスポットのレイアウトには一切触れない。
-  // 配置は index.html の 3x2 CSS Grid にのみ任せる。
   const style = document.createElement('style');
   style.textContent = `
     .game-reveal .header,
@@ -58,12 +56,12 @@
   }
   requestAnimationFrame(load);
 
-  // 捕獲後の再出現位置を固定する。
-  // index.html の respawnSpots() は新しい魚影をランダムな .spot に追加するため、
-  // ここで「最初に存在したスポットの位置」を記憶し、再出現時も同じ .spot に戻す。
+  // 捕獲後の再出現では、ランダムに選ばれた一時的な位置を一度も表示しない。
+  // 初回に存在した .spot の番号だけを記憶し、その番号の場所でのみ再出現させる。
   const pond = document.getElementById('pond');
   if (pond) {
     let fixedSlots = [];
+    let restoring = false;
 
     const captureSlots = () => {
       const spots = [...pond.querySelectorAll('.spot')];
@@ -74,40 +72,50 @@
     };
 
     const restoreSlots = () => {
+      if (restoring || !fixedSlots.length) return;
       const spots = [...pond.querySelectorAll('.spot')];
-      if (!fixedSlots.length || !spots.length) return;
+      const shadows = spots.flatMap(spot => [...spot.querySelectorAll('.shadow')]);
+      if (!shadows.length) return;
 
-      const shadows = spots
-        .flatMap(spot => [...spot.querySelectorAll('.shadow')]);
+      restoring = true;
+
+      // ランダムに生成された場所を一切描画しない。
+      spots.forEach(spot => { spot.style.opacity = '0'; });
 
       fixedSlots.forEach((slotIndex, i) => {
         const shadow = shadows[i];
         const target = spots[slotIndex];
         if (!shadow || !target) return;
-        if (shadow.parentElement !== target) target.appendChild(shadow);
-        // respawnSpots() で全スポットを一度透明にした後、
-        // 同じ場所だけをフェードインさせる。
-        target.style.opacity = '1';
+        target.appendChild(shadow);
+        shadow.style.opacity = '0';
+      });
+
+      // DOM移動が完了したあと、同じ場所だけをフェードイン。
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          fixedSlots.forEach((slotIndex, i) => {
+            const target = spots[slotIndex];
+            const shadow = target?.querySelector('.shadow');
+            if (!target || !shadow) return;
+            target.style.opacity = '1';
+            shadow.style.opacity = '1';
+          });
+          restoring = false;
+        });
       });
     };
 
     const observer = new MutationObserver(() => {
       const spots = [...pond.querySelectorAll('.spot')];
       const hasShadow = spots.some(spot => spot.querySelector('.shadow'));
-
-      // 初回生成時の位置を記憶。
       if (!fixedSlots.length && hasShadow) {
         captureSlots();
         return;
       }
-
-      // 捕獲後の再生成時は、ランダムに選ばれた位置を元の位置へ戻す。
       if (fixedSlots.length && hasShadow) restoreSlots();
     });
 
     observer.observe(pond, { childList: true, subtree: true });
-
-    // 初回生成が完了してから位置をロック。
     setTimeout(captureSlots, 900);
   }
 })();
