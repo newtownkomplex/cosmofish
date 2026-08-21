@@ -9,8 +9,6 @@
       .rarity-tabs .tab-count{display:block;margin-top:5px;font-size:11px;opacity:.9}
       .rarity-tabs button.tab-common.active{background:#ff4b4b;color:#fff}.rarity-tabs button.tab-rare.active{background:#72d9ff;color:#19383b}.rarity-tabs button.tab-mythical.active{background:#c084ff;color:#19383b}
       @media(max-width:700px){.rarity-tabs button{min-height:58px;font-size:13px}.rarity-tabs .tab-count{font-size:9px}}
-      /* 再出現時にスポットが横へずれないよう、位置は固定して透明度だけで消える */
-      #pond .spot{transform:none!important}
     `;document.head.appendChild(s);
   }
   function removeForbiddenUI(){
