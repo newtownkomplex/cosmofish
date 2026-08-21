@@ -1,12 +1,10 @@
 (() => {
   const style=document.createElement('style');
   style.textContent=`
-    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(3,1fr)!important;gap:0!important;padding:0!important;align-items:center!important;justify-items:center!important;width:100%!important;}
+    .pond{display:grid!important;position:relative!important;grid-template-columns:repeat(5,1fr)!important;grid-template-rows:repeat(3,1fr)!important;gap:0!important;padding:0!important;align-items:center!important;justify-items:center!important;width:116%!important;margin-left:-8%!important;overflow:hidden!important;}
     .spot{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0!important;justify-self:center!important;align-self:center!important;width:min(264px,30vw)!important;max-width:264px!important;aspect-ratio:1!important;animation:none!important;}
-    .spot:nth-child(1){grid-column:4;grid-row:1}.spot:nth-child(2){grid-column:3;grid-row:2}.spot:nth-child(3){grid-column:5;grid-row:2}.spot:nth-child(4){grid-column:2;grid-row:3}.spot:nth-child(5){grid-column:4;grid-row:3}.spot:nth-child(6){grid-column:6;grid-row:3}
-    /* 釣り場全体を画面内に収める。スポット自体の大きさは変更しない */
-    .pond{padding-inline:7%!important;padding-block:4%!important;overflow:hidden!important;}
-    @media(max-width:700px){.pond{grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(3,1fr)!important;padding-inline:8%!important;padding-block:5%!important}.spot{width:min(264px,30vw,145px)!important;max-width:145px!important}}
+    .spot:nth-child(1){grid-column:3;grid-row:1}.spot:nth-child(2){grid-column:2;grid-row:2}.spot:nth-child(3){grid-column:4;grid-row:2}.spot:nth-child(4){grid-column:1;grid-row:3}.spot:nth-child(5){grid-column:3;grid-row:3}.spot:nth-child(6){grid-column:5;grid-row:3}
+    @media(max-width:700px){.pond{grid-template-columns:repeat(5,1fr)!important;grid-template-rows:repeat(3,1fr)!important;width:116%!important;margin-left:-8%!important}.spot{width:min(264px,30vw,145px)!important;max-width:145px!important}}
   `;document.head.appendChild(style);
   const gauge=document.getElementById('gauge'),status=document.getElementById('status'),catchBox=document.getElementById('catch'),saveKey='cosmofish-catches',sizeKey='cosmofish-fish-sizes',failKey='cosmofish-failed-catches';
   let sizeRecords={},failedCatches=Number(localStorage.getItem(failKey)||0);try{sizeRecords=JSON.parse(localStorage.getItem(sizeKey)||'{}')}catch(e){}
